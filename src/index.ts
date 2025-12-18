@@ -8,361 +8,401 @@
  *
  * @author VibeTensor Private Limited
  * @license MIT
+ * @see https://github.com/VibeTensor/vibemcp
  */
 
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
+import { z } from 'zod';
 
 // Server version
 const VERSION = '0.1.0';
+const SERVER_NAME = 'vibemcp';
 
-// Initialize MCP Server
-const server = new Server(
+// =============================================================================
+// Initialize MCP Server (Modern Pattern - same as competitors)
+// =============================================================================
+
+const server = new McpServer({
+  name: SERVER_NAME,
+  version: VERSION,
+});
+
+// =============================================================================
+// TOON Encoder (Token Optimization)
+// =============================================================================
+
+interface EmailMessage {
+  id: string;
+  subject: string;
+  from: string;
+  date: string;
+  snippet?: string;
+}
+
+function toTOON(messages: EmailMessage[]): string {
+  if (messages.length === 0) return 'messages[0]{}';
+
+  // TOON format: header with count and schema, then data rows
+  const header = `messages[${messages.length}]{id,subject,from,date}`;
+  const rows = messages.map(m =>
+    `${m.id}\t${m.subject}\t${m.from}\t${m.date}`
+  ).join('\n');
+
+  return `${header}\n${rows}`;
+}
+
+function formatOutput(data: unknown, format: string = 'toon'): string {
+  if (format === 'json') {
+    return JSON.stringify(data, null, 2);
+  }
+
+  // TOON format (default) - 50-60% fewer tokens
+  if (Array.isArray(data)) {
+    return toTOON(data as EmailMessage[]);
+  }
+
+  return JSON.stringify(data);
+}
+
+// =============================================================================
+// GMAIL TOOLS
+// =============================================================================
+
+// Gmail: List Messages
+server.tool(
+  'gmail_list_messages',
+  'List Gmail messages with TOON-optimized output. Supports Gmail search operators.',
   {
-    name: 'vibemcp',
-    version: VERSION,
+    account: z.string().optional().describe('Account ID (default: primary)'),
+    query: z.string().optional().describe('Gmail search query (e.g., "is:unread from:john@example.com")'),
+    maxResults: z.number().min(1).max(500).default(10).describe('Max messages to return'),
+    format: z.enum(['toon', 'json']).default('toon').describe('Output format (toon saves 50% tokens)'),
   },
-  {
-    capabilities: {
-      tools: {},
-    },
+  async ({ account, query, maxResults, format }) => {
+    // TODO: Implement Gmail API call
+    // For now, return placeholder
+    const placeholder: EmailMessage[] = [
+      { id: 'msg001', subject: 'Welcome to VibeMCP', from: 'hello@vibetensor.com', date: '2025-12-18' },
+      { id: 'msg002', subject: 'Getting Started Guide', from: 'support@vibetensor.com', date: '2025-12-17' },
+    ];
+
+    return {
+      content: [{
+        type: 'text',
+        text: formatOutput(placeholder, format),
+      }],
+    };
   }
 );
 
-// Tool definitions
-const TOOLS = [
+// Gmail: Get Message
+server.tool(
+  'gmail_get_message',
+  'Get full Gmail message content by ID.',
   {
-    name: 'gmail_list_messages',
-    description: 'List Gmail messages with TOON-optimized output. Returns emails in compact format for reduced token usage.',
-    inputSchema: {
-      type: 'object' as const,
-      properties: {
-        account: {
-          type: 'string',
-          description: 'Account identifier (e.g., "personal", "work")',
-        },
-        query: {
-          type: 'string',
-          description: 'Gmail search query (e.g., "is:unread", "from:john@example.com")',
-        },
-        maxResults: {
-          type: 'number',
-          description: 'Maximum number of messages to return (default: 10)',
-          default: 10,
-        },
-        format: {
-          type: 'string',
-          enum: ['toon', 'json'],
-          description: 'Output format (default: toon for 50% token savings)',
-          default: 'toon',
-        },
-      },
-    },
+    account: z.string().optional(),
+    messageId: z.string().describe('Gmail message ID'),
+    format: z.enum(['toon', 'json']).default('toon'),
   },
-  {
-    name: 'gmail_get_message',
-    description: 'Get a specific Gmail message by ID with full content.',
-    inputSchema: {
-      type: 'object' as const,
-      properties: {
-        account: {
-          type: 'string',
-          description: 'Account identifier',
-        },
-        messageId: {
-          type: 'string',
-          description: 'Gmail message ID',
-        },
-        format: {
-          type: 'string',
-          enum: ['toon', 'json'],
-          default: 'toon',
-        },
-      },
-      required: ['messageId'],
-    },
-  },
-  {
-    name: 'gmail_send_message',
-    description: 'Send an email via Gmail with proper threading support (In-Reply-To headers).',
-    inputSchema: {
-      type: 'object' as const,
-      properties: {
-        account: {
-          type: 'string',
-          description: 'Account identifier',
-        },
-        to: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Recipient email addresses',
-        },
-        subject: {
-          type: 'string',
-          description: 'Email subject',
-        },
-        body: {
-          type: 'string',
-          description: 'Email body (plain text or HTML)',
-        },
-        inReplyTo: {
-          type: 'string',
-          description: 'Message-ID for threading (optional)',
-        },
-        cc: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'CC recipients (optional)',
-        },
-      },
-      required: ['to', 'subject', 'body'],
-    },
-  },
-  {
-    name: 'outlook_list_messages',
-    description: 'List Outlook/Microsoft 365 messages with TOON-optimized output.',
-    inputSchema: {
-      type: 'object' as const,
-      properties: {
-        account: {
-          type: 'string',
-          description: 'Account identifier',
-        },
-        folder: {
-          type: 'string',
-          description: 'Folder name (default: inbox)',
-          default: 'inbox',
-        },
-        filter: {
-          type: 'string',
-          description: 'OData filter query',
-        },
-        top: {
-          type: 'number',
-          description: 'Maximum results (default: 10)',
-          default: 10,
-        },
-        format: {
-          type: 'string',
-          enum: ['toon', 'json'],
-          default: 'toon',
-        },
-      },
-    },
-  },
-  {
-    name: 'outlook_send_message',
-    description: 'Send an email via Microsoft 365 Outlook with threading support.',
-    inputSchema: {
-      type: 'object' as const,
-      properties: {
-        account: {
-          type: 'string',
-          description: 'Account identifier',
-        },
-        toRecipients: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Recipient email addresses',
-        },
-        subject: {
-          type: 'string',
-          description: 'Email subject',
-        },
-        body: {
-          type: 'string',
-          description: 'Email body content',
-        },
-        bodyType: {
-          type: 'string',
-          enum: ['text', 'html'],
-          default: 'text',
-        },
-        conversationId: {
-          type: 'string',
-          description: 'Conversation ID for threading (optional)',
-        },
-      },
-      required: ['toRecipients', 'subject', 'body'],
-    },
-  },
-  {
-    name: 'unified_search',
-    description: 'Search across all configured email accounts (Gmail + Outlook) simultaneously.',
-    inputSchema: {
-      type: 'object' as const,
-      properties: {
-        query: {
-          type: 'string',
-          description: 'Search query',
-        },
-        accounts: {
-          type: 'array',
-          items: { type: 'string' },
-          description: 'Account IDs to search (default: all)',
-        },
-        maxResultsPerAccount: {
-          type: 'number',
-          default: 5,
-        },
-        format: {
-          type: 'string',
-          enum: ['toon', 'json'],
-          default: 'toon',
-        },
-      },
-      required: ['query'],
-    },
-  },
-  {
-    name: 'list_accounts',
-    description: 'List all configured email accounts.',
-    inputSchema: {
-      type: 'object' as const,
-      properties: {},
-    },
-  },
-  {
-    name: 'switch_account',
-    description: 'Switch the active account for subsequent operations.',
-    inputSchema: {
-      type: 'object' as const,
-      properties: {
-        accountId: {
-          type: 'string',
-          description: 'Account identifier to switch to',
-        },
-      },
-      required: ['accountId'],
-    },
-  },
-];
-
-// Handle list tools request
-server.setRequestHandler(ListToolsRequestSchema, async () => {
-  return { tools: TOOLS };
-});
-
-// Handle tool calls
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  const { name, arguments: args } = request.params;
-
-  try {
-    switch (name) {
-      case 'gmail_list_messages':
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `[VibeMCP] Gmail list_messages not yet implemented.\n\nThis is a placeholder for the TOON-optimized Gmail message listing.\n\nArgs: ${JSON.stringify(args, null, 2)}`,
-            },
-          ],
-        };
-
-      case 'gmail_get_message':
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `[VibeMCP] Gmail get_message not yet implemented.\n\nArgs: ${JSON.stringify(args, null, 2)}`,
-            },
-          ],
-        };
-
-      case 'gmail_send_message':
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `[VibeMCP] Gmail send_message not yet implemented.\n\nArgs: ${JSON.stringify(args, null, 2)}`,
-            },
-          ],
-        };
-
-      case 'outlook_list_messages':
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `[VibeMCP] Outlook list_messages not yet implemented.\n\nArgs: ${JSON.stringify(args, null, 2)}`,
-            },
-          ],
-        };
-
-      case 'outlook_send_message':
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `[VibeMCP] Outlook send_message not yet implemented.\n\nArgs: ${JSON.stringify(args, null, 2)}`,
-            },
-          ],
-        };
-
-      case 'unified_search':
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `[VibeMCP] Unified search not yet implemented.\n\nArgs: ${JSON.stringify(args, null, 2)}`,
-            },
-          ],
-        };
-
-      case 'list_accounts':
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `[VibeMCP] No accounts configured yet.\n\nRun 'npx @vibetensor/vibemcp auth google' or 'npx @vibetensor/vibemcp auth microsoft' to add accounts.`,
-            },
-          ],
-        };
-
-      case 'switch_account':
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `[VibeMCP] Account switching not yet implemented.\n\nArgs: ${JSON.stringify(args, null, 2)}`,
-            },
-          ],
-        };
-
-      default:
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Unknown tool: ${name}`,
-            },
-          ],
-          isError: true,
-        };
-    }
-  } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
+  async ({ account, messageId, format }) => {
+    // TODO: Implement Gmail API call
     return {
-      content: [
-        {
-          type: 'text',
-          text: `Error executing ${name}: ${errorMessage}`,
-        },
-      ],
-      isError: true,
+      content: [{
+        type: 'text',
+        text: `[VibeMCP] Gmail get_message for ${messageId} - Implementation pending`,
+      }],
     };
   }
-});
+);
 
-// Start the server
+// Gmail: Send Message
+server.tool(
+  'gmail_send_message',
+  'Send an email via Gmail with proper RFC 2822 threading support.',
+  {
+    account: z.string().optional(),
+    to: z.array(z.string().email()).describe('Recipient email addresses'),
+    subject: z.string().describe('Email subject'),
+    body: z.string().describe('Email body (text or HTML)'),
+    bodyType: z.enum(['text', 'html']).default('text'),
+    cc: z.array(z.string().email()).optional(),
+    bcc: z.array(z.string().email()).optional(),
+    inReplyTo: z.string().optional().describe('Message-ID for threading'),
+    threadId: z.string().optional().describe('Gmail thread ID'),
+  },
+  async ({ account, to, subject, body, bodyType, cc, bcc, inReplyTo, threadId }) => {
+    // TODO: Implement Gmail API call
+    return {
+      content: [{
+        type: 'text',
+        text: `[VibeMCP] Would send email to: ${to.join(', ')}\nSubject: ${subject}\n\nImplementation pending.`,
+      }],
+    };
+  }
+);
+
+// Gmail: List Labels
+server.tool(
+  'gmail_list_labels',
+  'List all Gmail labels.',
+  {
+    account: z.string().optional(),
+    format: z.enum(['toon', 'json']).default('toon'),
+  },
+  async ({ account, format }) => {
+    // TODO: Implement Gmail API call
+    return {
+      content: [{
+        type: 'text',
+        text: '[VibeMCP] Gmail labels - Implementation pending',
+      }],
+    };
+  }
+);
+
+// Gmail: Create Label
+server.tool(
+  'gmail_create_label',
+  'Create a new Gmail label with optional color.',
+  {
+    account: z.string().optional(),
+    name: z.string().describe('Label name'),
+    backgroundColor: z.string().optional().describe('Hex color (e.g., #ff0000)'),
+    textColor: z.string().optional(),
+  },
+  async ({ account, name, backgroundColor, textColor }) => {
+    // TODO: Implement Gmail API call
+    return {
+      content: [{
+        type: 'text',
+        text: `[VibeMCP] Would create label: ${name} - Implementation pending`,
+      }],
+    };
+  }
+);
+
+// =============================================================================
+// OUTLOOK / MICROSOFT 365 TOOLS
+// =============================================================================
+
+// Outlook: List Messages
+server.tool(
+  'outlook_list_messages',
+  'List Outlook messages with TOON-optimized output. Supports OData queries.',
+  {
+    account: z.string().optional(),
+    folderId: z.string().default('inbox').describe('Folder ID or well-known name'),
+    filter: z.string().optional().describe('OData $filter query'),
+    search: z.string().optional().describe('KQL search query'),
+    top: z.number().min(1).max(1000).default(10),
+    format: z.enum(['toon', 'json']).default('toon'),
+  },
+  async ({ account, folderId, filter, search, top, format }) => {
+    // TODO: Implement Microsoft Graph API call
+    const placeholder: EmailMessage[] = [
+      { id: 'AAMk001', subject: 'Teams Meeting', from: 'colleague@company.com', date: '2025-12-18' },
+    ];
+
+    return {
+      content: [{
+        type: 'text',
+        text: formatOutput(placeholder, format),
+      }],
+    };
+  }
+);
+
+// Outlook: Send Message
+server.tool(
+  'outlook_send_message',
+  'Send an email via Microsoft 365 Outlook.',
+  {
+    account: z.string().optional(),
+    toRecipients: z.array(z.string().email()).describe('Recipient emails'),
+    subject: z.string(),
+    body: z.string(),
+    bodyType: z.enum(['text', 'html']).default('text'),
+    ccRecipients: z.array(z.string().email()).optional(),
+    bccRecipients: z.array(z.string().email()).optional(),
+    importance: z.enum(['low', 'normal', 'high']).default('normal'),
+    saveToSentItems: z.boolean().default(true),
+  },
+  async ({ account, toRecipients, subject, body, bodyType, importance }) => {
+    // TODO: Implement Microsoft Graph API call
+    return {
+      content: [{
+        type: 'text',
+        text: `[VibeMCP] Would send Outlook email to: ${toRecipients.join(', ')}\nSubject: ${subject}\n\nImplementation pending.`,
+      }],
+    };
+  }
+);
+
+// Outlook: List Folders
+server.tool(
+  'outlook_list_folders',
+  'List Outlook mail folders.',
+  {
+    account: z.string().optional(),
+    format: z.enum(['toon', 'json']).default('toon'),
+  },
+  async ({ account, format }) => {
+    // TODO: Implement Microsoft Graph API call
+    return {
+      content: [{
+        type: 'text',
+        text: '[VibeMCP] Outlook folders - Implementation pending',
+      }],
+    };
+  }
+);
+
+// =============================================================================
+// CALENDAR TOOLS (Google Calendar + Outlook Calendar)
+// =============================================================================
+
+// Calendar: List Events
+server.tool(
+  'calendar_list_events',
+  'List calendar events with TOON output. Works with Google Calendar and Outlook.',
+  {
+    account: z.string().optional(),
+    calendarId: z.string().default('primary'),
+    timeMin: z.string().optional().describe('Start time (ISO 8601)'),
+    timeMax: z.string().optional().describe('End time (ISO 8601)'),
+    maxResults: z.number().default(10),
+    format: z.enum(['toon', 'json']).default('toon'),
+  },
+  async ({ account, calendarId, timeMin, timeMax, maxResults, format }) => {
+    // TODO: Implement Calendar API call
+    return {
+      content: [{
+        type: 'text',
+        text: '[VibeMCP] Calendar events - Implementation pending',
+      }],
+    };
+  }
+);
+
+// Calendar: Create Event
+server.tool(
+  'calendar_create_event',
+  'Create a new calendar event.',
+  {
+    account: z.string().optional(),
+    calendarId: z.string().default('primary'),
+    summary: z.string().describe('Event title'),
+    description: z.string().optional(),
+    location: z.string().optional(),
+    start: z.string().describe('Start time (ISO 8601)'),
+    end: z.string().describe('End time (ISO 8601)'),
+    attendees: z.array(z.string().email()).optional(),
+    createConference: z.boolean().default(false).describe('Create Teams/Meet link'),
+  },
+  async ({ account, calendarId, summary, start, end, attendees, createConference }) => {
+    // TODO: Implement Calendar API call
+    return {
+      content: [{
+        type: 'text',
+        text: `[VibeMCP] Would create event: ${summary}\nStart: ${start}\nEnd: ${end}\n\nImplementation pending.`,
+      }],
+    };
+  }
+);
+
+// =============================================================================
+// UNIFIED / CROSS-ACCOUNT TOOLS
+// =============================================================================
+
+// Unified: Search across all accounts
+server.tool(
+  'unified_search',
+  'Search across all configured email accounts (Gmail + Outlook) simultaneously.',
+  {
+    query: z.string().describe('Search query'),
+    accounts: z.array(z.string()).optional().describe('Account IDs (default: all)'),
+    maxResultsPerAccount: z.number().default(5),
+    format: z.enum(['toon', 'json']).default('toon'),
+  },
+  async ({ query, accounts, maxResultsPerAccount, format }) => {
+    // TODO: Implement cross-account search
+    return {
+      content: [{
+        type: 'text',
+        text: `[VibeMCP] Unified search for "${query}" - Implementation pending`,
+      }],
+    };
+  }
+);
+
+// List configured accounts
+server.tool(
+  'list_accounts',
+  'List all configured email accounts.',
+  {
+    format: z.enum(['toon', 'json']).default('toon'),
+  },
+  async ({ format }) => {
+    // TODO: Return actual configured accounts
+    return {
+      content: [{
+        type: 'text',
+        text: '[VibeMCP] No accounts configured yet.\n\nRun authentication:\n- npx @vibetensor/vibemcp auth google\n- npx @vibetensor/vibemcp auth microsoft',
+      }],
+    };
+  }
+);
+
+// Switch account
+server.tool(
+  'switch_account',
+  'Switch the active account for subsequent operations.',
+  {
+    accountId: z.string().describe('Account ID to switch to'),
+  },
+  async ({ accountId }) => {
+    // TODO: Implement account switching
+    return {
+      content: [{
+        type: 'text',
+        text: `[VibeMCP] Would switch to account: ${accountId} - Implementation pending`,
+      }],
+    };
+  }
+);
+
+// =============================================================================
+// ADMIN / CONFIGURATION TOOLS
+// =============================================================================
+
+// Get token savings statistics
+server.tool(
+  'stats_token_savings',
+  'Get token savings statistics from TOON format.',
+  {
+    period: z.enum(['hour', 'day', 'week', 'month']).default('day'),
+  },
+  async ({ period }) => {
+    // TODO: Implement actual statistics
+    return {
+      content: [{
+        type: 'text',
+        text: `[VibeMCP] Token Savings (${period}):\n- JSON tokens: 1,000\n- TOON tokens: 450\n- Savings: 55%\n\n(Placeholder data)`,
+      }],
+    };
+  }
+);
+
+// =============================================================================
+// Start Server
+// =============================================================================
+
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error(`VibeMCP v${VERSION} running on stdio`);
+  console.error('Tools registered: gmail_*, outlook_*, calendar_*, unified_*, stats_*');
 }
 
 main().catch((error) => {
