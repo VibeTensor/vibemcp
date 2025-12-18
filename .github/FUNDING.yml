@@ -1,0 +1,12 @@
+# Funding platforms for VibeMCP
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/displaying-a-sponsor-button-in-your-repository
+
+# GitHub Sponsors
+github: [VibeTensor]
+
+# Open Collective
+open_collective: vibemcp
+
+# Custom funding links
+custom:
+  - https://vibetensor.com/sponsor

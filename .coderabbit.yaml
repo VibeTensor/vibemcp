@@ -1,0 +1,122 @@
+# CodeRabbit Configuration
+# https://docs.coderabbit.ai/guides/configure-coderabbit
+
+language: en-US
+
+# Review settings
+reviews:
+  # Enable automatic reviews on pull requests
+  auto_review:
+    enabled: true
+    # Ignore drafts
+    drafts: false
+    # Review base branches
+    base_branches:
+      - main
+      - develop
+
+  # Review profile (chill, default, strict, assertive)
+  profile: default
+
+  # Request changes on high severity issues
+  request_changes_workflow: true
+
+  # High-level summary in PR comment
+  high_level_summary: true
+
+  # Add poem in summary (fun but optional)
+  poem: false
+
+  # Review status in commit status
+  review_status: true
+
+  # Collapse walkthrough in comments
+  collapse_walkthrough: true
+
+  # Path-based review instructions
+  path_instructions:
+    - path: "src/**/*.ts"
+      instructions: |
+        - Check for TypeScript best practices
+        - Ensure proper error handling
+        - Verify input validation for security
+        - Check for potential memory leaks
+        - Ensure TOON output format is used where applicable
+
+    - path: "src/auth/**"
+      instructions: |
+        - CRITICAL: Review for security vulnerabilities
+        - Ensure OAuth 2.1 best practices
+        - Check for token leakage
+        - Verify no hardcoded secrets
+        - Check credential storage security
+
+    - path: "src/tools/**"
+      instructions: |
+        - Verify tool schemas are complete
+        - Check for input validation
+        - Ensure consistent error messages
+        - Verify TOON output support
+
+    - path: "src/toon/**"
+      instructions: |
+        - Check for token efficiency
+        - Verify encoding/decoding correctness
+        - Test edge cases handling
+
+    - path: "**/*.md"
+      instructions: |
+        - Check for spelling and grammar
+        - Verify links are valid
+        - Ensure code examples are correct
+
+# Chat settings (for interactive comments)
+chat:
+  auto_reply: true
+
+# Knowledge base (learns from codebase)
+knowledge_base:
+  opt_out: false
+  learnings:
+    scope: auto
+
+# Early access features
+early_access: true
+
+# Tone of reviews
+tone_instructions: |
+  - Be constructive and helpful
+  - Focus on code quality and security
+  - Suggest improvements, not just problems
+  - Consider token efficiency for all data output
+  - Prioritize security issues in auth-related code
+
+# Tools integration
+tools:
+  # GitHub Actions integration
+  github-checks:
+    enabled: true
+    timeout_ms: 90000
+
+  # Language-specific tools
+  biome:
+    enabled: true
+  eslint:
+    enabled: true
+
+  # Security scanning
+  shellcheck:
+    enabled: true
+
+  # Markdown linting
+  markdownlint:
+    enabled: true
+
+# Ignore patterns (files to skip)
+ignore:
+  - "**/*.lock"
+  - "**/node_modules/**"
+  - "**/dist/**"
+  - "**/coverage/**"
+  - "**/*.min.js"
+  - "**/package-lock.json"

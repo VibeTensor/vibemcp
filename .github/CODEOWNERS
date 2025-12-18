@@ -1,0 +1,43 @@
+# VibeMCP Code Owners
+# These owners will be requested for review when someone opens a pull request.
+
+# Global owners (default for everything)
+* @VibeTensor/maintainers
+
+# Core server implementation
+/src/index.ts @VibeTensor/core-team
+/src/server.ts @VibeTensor/core-team
+
+# Authentication
+/src/auth/ @VibeTensor/security-team
+
+# Provider implementations
+/src/providers/gmail/ @VibeTensor/gmail-team
+/src/providers/outlook/ @VibeTensor/outlook-team
+/src/providers/calendar/ @VibeTensor/calendar-team
+
+# Token optimization
+/src/toon/ @VibeTensor/optimization-team
+/src/compression/ @VibeTensor/optimization-team
+/src/cache/ @VibeTensor/optimization-team
+
+# Tool definitions
+/src/tools/ @VibeTensor/core-team
+
+# Documentation
+/docs/ @VibeTensor/docs-team
+*.md @VibeTensor/docs-team
+
+# CI/CD and DevOps
+/.github/ @VibeTensor/devops-team
+/Dockerfile @VibeTensor/devops-team
+/docker-compose.yml @VibeTensor/devops-team
+
+# Security-sensitive files
+/src/auth/ @VibeTensor/security-team
+/.github/workflows/ @VibeTensor/security-team
+/SECURITY.md @VibeTensor/security-team
+
+# Package configuration
+/package.json @VibeTensor/core-team
+/tsconfig.json @VibeTensor/core-team

@@ -1,0 +1,75 @@
+{
+  "name": "@vibetensor/vibemcp",
+  "version": "0.1.0",
+  "description": "Token-Optimized Unified MCP Server for Gmail & Microsoft 365",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "vibemcp": "./dist/cli.js"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "format": "prettier --write src/",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "gmail",
+    "outlook",
+    "microsoft-365",
+    "toon",
+    "token-optimization",
+    "llm",
+    "ai",
+    "claude",
+    "anthropic"
+  ],
+  "author": {
+    "name": "VibeTensor Private Limited",
+    "email": "opensource@vibetensor.com",
+    "url": "https://vibetensor.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/VibeTensor/vibemcp.git"
+  },
+  "bugs": {
+    "url": "https://github.com/VibeTensor/vibemcp/issues"
+  },
+  "homepage": "https://github.com/VibeTensor/vibemcp#readme",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "googleapis": "^140.0.0",
+    "@microsoft/microsoft-graph-client": "^3.0.0",
+    "@azure/msal-node": "^2.0.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "typescript": "^5.5.0",
+    "tsx": "^4.0.0",
+    "jest": "^29.0.0",
+    "@types/jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
+    "eslint": "^9.0.0",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "prettier": "^3.0.0"
+  },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ]
+}
