@@ -1,23 +1,25 @@
-# VibeMCP
-
-**Token-Optimized Unified MCP Server for Gmail & Microsoft 365**
-
-[![License: PolyForm Noncommercial](https://img.shields.io/badge/License-PolyForm%20Noncommercial-purple.svg)](https://polyformproject.org/licenses/noncommercial/1.0.0/)
-[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
-[![MCP Version](https://img.shields.io/badge/MCP-1.0-blue)](https://modelcontextprotocol.io)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue)](https://www.typescriptlang.org)
+<p align="center">
+  <h1 align="center">VibeMCP</h1>
+  <p align="center">
+    <strong>Token-Optimized Unified MCP Server for Gmail & Microsoft 365</strong>
+  </p>
+  <p align="center">
+    <a href="https://www.npmjs.com/package/@vibetensor/vibemcp"><img src="https://img.shields.io/npm/v/@vibetensor/vibemcp.svg" alt="npm version"></a>
+    <a href="https://polyformproject.org/licenses/noncommercial/1.0.0/"><img src="https://img.shields.io/badge/License-PolyForm%20Noncommercial-purple.svg" alt="License"></a>
+    <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen" alt="Node.js"></a>
+    <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-1.0-blue" alt="MCP"></a>
+    <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-5.5-blue" alt="TypeScript"></a>
+  </p>
+  <p align="center">
+    One server. Two ecosystems. Half the tokens.
+  </p>
+</p>
 
 ---
 
-## What is VibeMCP?
+## The Problem
 
-VibeMCP is an open-source MCP server that **unifies Gmail and Microsoft 365** into a single server with **TOON (Token-Oriented Object Notation)** output, cutting LLM token consumption by **51% on average** compared to standard JSON MCP servers.
-
-One server. Two ecosystems. Half the tokens.
-
-### The Problem
-
-Most email/calendar MCP servers return verbose JSON that wastes tokens:
+Most email and calendar MCP servers return verbose JSON that wastes tokens:
 
 ```json
 [
@@ -28,7 +30,9 @@ Most email/calendar MCP servers return verbose JSON that wastes tokens:
 
 **~85 tokens** for 2 messages. Repeated keys (`"id"`, `"subject"`, `"from"`, `"date"`) eat tokens on every row.
 
-### The VibeMCP Solution
+## The Solution
+
+VibeMCP uses [TOON (Token-Oriented Object Notation)](https://github.com/toon-format/toon) — an open format that declares the schema once, then streams data as tab-delimited rows:
 
 ```
 messages[2]{id,subject,from,date,snippet}
@@ -36,177 +40,95 @@ abc123	Meeting Tomorrow	john@example.com	2025-12-18	Let's meet at 3pm...
 def456	Q4 Report	jane@example.com	2025-12-17	Please review the...
 ```
 
-**~38 tokens** for the same data. The header `messages[2]{id,subject,from,date,snippet}` declares the schema once, then rows are tab-delimited. No repeated keys, no brackets, no quotes.
+**~38 tokens** for the same data. No repeated keys, no brackets, no quotes.
+
+Every tool supports both `toon` and `json` output via the `format` parameter.
 
 ---
 
-## Benchmarks (Real Data)
+## Benchmarks
 
-Measured on live Gmail and Outlook accounts, Feb 2026:
+Measured on live Gmail and Outlook accounts, February 2026:
 
-| Dataset | TOON | JSON | Token Savings |
-|---------|------|------|:-------------:|
-| Gmail - 10 messages | 591 tokens | 961 tokens | **38%** |
-| Outlook - 10 messages | 872 tokens | 1,480 tokens | **41%** |
-| Google Calendar - 11 events | 441 tokens | 1,462 tokens | **70%** |
-| **Combined** | **1,904 tokens** | **3,903 tokens** | **51%** |
+| Dataset                      |   TOON |   JSON | Savings |
+|:-----------------------------|-------:|-------:|:-------:|
+| Gmail - 10 messages          |    591 |    961 | **38%** |
+| Outlook - 10 messages        |    872 |  1,480 | **41%** |
+| Google Calendar - 11 events  |    441 |  1,462 | **70%** |
+| **Combined**                 | **1,904** | **3,903** | **51%** |
 
-Calendar events show 70% savings because JSON has deeply nested objects (`start.dateTime`, `start.timeZone`, `attendees[].emailAddress.address`) that TOON flattens.
+Calendar events show 70% savings because the raw Google Calendar API response has deeply nested objects (`start.dateTime`, `attendees[].email`, `organizer.email`) that VibeMCP's service layer flattens to primitive values before TOON encoding.
 
-### Cost Impact
+<details>
+<summary><strong>Cost impact at Claude Opus pricing ($15/M input tokens)</strong></summary>
 
-At Claude Opus pricing ($15/M input tokens):
+| Usage          | Annual Token Savings | Annual Cost Savings |
+|:---------------|---------------------:|:-------------------:|
+| 10 calls/day   |          7.3M tokens |          **$109**   |
+| 50 calls/day   |         36.5M tokens |          **$547**   |
+| 200 calls/day  |          146M tokens |        **$2,190**   |
 
-| Usage | Annual Token Savings | Annual Cost Savings |
-|-------|---------------------|:-------------------:|
-| 10 calls/day | 7.3M tokens | **$109** |
-| 50 calls/day | 36.5M tokens | **$547** |
-| 200 calls/day | 146M tokens | **$2,190** |
-
-Every tool in VibeMCP supports both `toon` and `json` output via the `format` parameter, so you can switch per-call.
-
----
-
-## Comparison with Other MCP Servers
-
-| Feature | VibeMCP | [gmail-mcp](https://github.com/shinzo-labs/gmail-mcp) | [ms-365-mcp-server](https://github.com/Softeria/ms-365-mcp-server) | [google_workspace_mcp](https://github.com/taylorwilsdon/google_workspace_mcp) |
-|---------|:-------:|:---------:|:------------------:|:---------------------:|
-| Gmail | 8 tools | 60+ tools | - | 80+ tools |
-| Outlook Mail | 8 tools | - | 90+ tools | - |
-| Google Calendar | 4 tools | - | - | included |
-| Outlook Calendar | 5 tools | - | included | - |
-| **Unified (both providers)** | **Yes** | No | No | No |
-| **TOON output** | **Yes** | No | No | No |
-| **Multi-account** | **Native** | No | No | Manual |
-| **Cross-account search** | **Yes** | No | No | No |
-| Token optimization | **51% avg** | None | None | None |
-| Language | TypeScript | Python | TypeScript | Python |
-
-**VibeMCP is the first MCP server that natively outputs TOON.** Existing TOON MCP servers (like `toon-mcp`) are generic JSON-to-TOON converters. VibeMCP encodes at the source level, selecting the optimal fields per data type.
-
----
-
-## Tools (31 total)
-
-### Account Management (7 tools)
-
-| Tool | Description |
-|------|-------------|
-| `list_accounts` | List all connected accounts with auth status |
-| `add_google_account` | Start Google OAuth flow (browser-based) |
-| `complete_google_auth` | Complete Google authentication |
-| `add_microsoft_account` | Start Microsoft Device Code flow |
-| `complete_microsoft_auth` | Complete Microsoft authentication |
-| `remove_account` | Remove a connected account |
-| `accounts_status` | Check auth status and server configuration |
-
-### Gmail (8 tools)
-
-| Tool | Description |
-|------|-------------|
-| `gmail_list_messages` | List/search messages with Gmail operators |
-| `gmail_get_message` | Get full message content with body and attachments |
-| `gmail_send_message` | Send email with RFC 2822 compliance |
-| `gmail_reply_to_message` | Reply with proper threading (In-Reply-To/References) |
-| `gmail_create_draft` | Create a draft email |
-| `gmail_list_labels` | List all Gmail labels |
-| `gmail_list_threads` | List email threads |
-| `gmail_get_thread` | Get full thread with all messages |
-
-### Outlook (8 tools)
-
-| Tool | Description |
-|------|-------------|
-| `outlook_list_messages` | List messages with folder filtering |
-| `outlook_get_message` | Get full message content |
-| `outlook_send_message` | Send email via Microsoft Graph |
-| `outlook_reply_to_message` | Reply to a message |
-| `outlook_forward_message` | Forward a message |
-| `outlook_list_folders` | List mail folders |
-| `outlook_move_message` | Move message between folders |
-| `outlook_search` | Search messages via Microsoft Graph |
-
-### Calendar (5 tools)
-
-| Tool | Description |
-|------|-------------|
-| `calendar_list_calendars` | List calendars (Google or Outlook, auto-detected) |
-| `calendar_list_events` | List events in a time range |
-| `calendar_create_event` | Create event (supports Teams/Meet links) |
-| `calendar_update_event` | Update an Outlook event |
-| `calendar_delete_event` | Delete an event |
-
-### Unified / Cross-Account (3 tools)
-
-| Tool | Description |
-|------|-------------|
-| `unified_search` | Search across all email accounts simultaneously |
-| `unified_inbox` | Aggregated unread messages from all accounts |
-| `unified_calendar` | Merged calendar view across all providers |
+</details>
 
 ---
 
 ## Quick Start
 
-### Prerequisites
-
-- Node.js >= 18
-- Google Cloud OAuth credentials ([setup guide](#google-oauth-setup))
-- Azure App Registration ([setup guide](#microsoft-auth-setup))
-
-### Installation
+### 1. Install
 
 ```bash
-# Clone and build
 git clone https://github.com/VibeTensor/vibemcp.git
 cd vibemcp
-npm install
-npm run build
+npm install && npm run build
 ```
 
-### Configure Environment
+Or via npm:
 
-Create a `.env` file in the project root:
+```bash
+npm install @vibetensor/vibemcp
+```
+
+### 2. Configure
+
+Create `.env` in the project root:
 
 ```env
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 MICROSOFT_CLIENT_ID=your-azure-client-id
 MICROSOFT_TENANT_ID=common
-VIBEMCP_OUTPUT_FORMAT=toon
 ```
 
-### Add to Claude Code
+### 3. Add to your MCP client
 
-Add to your Claude Code MCP config (`~/.claude.json` > `mcpServers`):
+**Claude Code** (`~/.claude.json` > `mcpServers`):
 
 ```json
 {
   "vibemcp": {
     "type": "stdio",
     "command": "node",
-    "args": ["/path/to/vibemcp/dist/index.js"],
-    "env": {}
+    "args": ["/path/to/vibemcp/dist/index.js"]
   }
 }
 ```
 
-### Authenticate Accounts
+### 4. Authenticate
 
-Once VibeMCP is running as an MCP server, use the built-in tools:
+Use the built-in MCP tools:
 
 ```
 > Add my Google account
-# VibeMCP calls add_google_account -> opens browser for OAuth
-# Then calls complete_google_auth to finish
+  → add_google_account opens browser for OAuth
+  → complete_google_auth finishes the flow
 
 > Add my Microsoft account
-# VibeMCP calls add_microsoft_account -> returns device code
-# You enter the code at microsoft.com/devicelogin
-# Then calls complete_microsoft_auth to finish
+  → add_microsoft_account returns a device code
+  → Enter the code at microsoft.com/devicelogin
+  → complete_microsoft_auth finishes the flow
 ```
 
-Or use the CLI directly:
+Or use the CLI:
 
 ```bash
 npx tsx src/cli.ts auth google your@gmail.com
@@ -216,49 +138,163 @@ npx tsx src/cli.ts accounts list
 
 ---
 
+## Tools
+
+**31 tools** across 5 categories:
+
+### Account Management (7)
+
+| Tool                       | Description                                      |
+|:---------------------------|:-------------------------------------------------|
+| `list_accounts`            | List all connected accounts with auth status     |
+| `add_google_account`       | Start Google OAuth flow (browser-based)          |
+| `complete_google_auth`     | Complete Google authentication                   |
+| `add_microsoft_account`    | Start Microsoft Device Code flow                 |
+| `complete_microsoft_auth`  | Complete Microsoft authentication                |
+| `remove_account`           | Remove a connected account                       |
+| `accounts_status`          | Check auth status and server configuration       |
+
+### Gmail (8)
+
+| Tool                       | Description                                             |
+|:---------------------------|:--------------------------------------------------------|
+| `gmail_list_messages`      | List/search messages with Gmail search operators        |
+| `gmail_get_message`        | Get full message content with body and attachments      |
+| `gmail_send_message`       | Send email with RFC 2822 compliance                     |
+| `gmail_reply_to_message`   | Reply with proper threading (In-Reply-To / References)  |
+| `gmail_create_draft`       | Create a draft email                                    |
+| `gmail_list_labels`        | List all Gmail labels                                   |
+| `gmail_list_threads`       | List email threads                                      |
+| `gmail_get_thread`         | Get full thread with all messages                       |
+
+### Outlook (8)
+
+| Tool                       | Description                                  |
+|:---------------------------|:---------------------------------------------|
+| `outlook_list_messages`    | List messages with folder filtering          |
+| `outlook_get_message`      | Get full message content                     |
+| `outlook_send_message`     | Send email via Microsoft Graph               |
+| `outlook_reply_to_message` | Reply to a message                           |
+| `outlook_forward_message`  | Forward a message                            |
+| `outlook_list_folders`     | List mail folders                            |
+| `outlook_move_message`     | Move message between folders                 |
+| `outlook_search`           | Search messages via Microsoft Graph          |
+
+### Calendar (5)
+
+| Tool                       | Description                                         |
+|:---------------------------|:----------------------------------------------------|
+| `calendar_list_calendars`  | List calendars (Google or Outlook, auto-detected)   |
+| `calendar_list_events`     | List events in a time range                         |
+| `calendar_create_event`    | Create event (supports Teams / Meet links)          |
+| `calendar_update_event`    | Update an Outlook event                             |
+| `calendar_delete_event`    | Delete an event                                     |
+
+### Unified / Cross-Account (3)
+
+| Tool                       | Description                                          |
+|:---------------------------|:-----------------------------------------------------|
+| `unified_search`           | Search across all email accounts simultaneously      |
+| `unified_inbox`            | Aggregated unread messages from all accounts         |
+| `unified_calendar`         | Merged calendar view across all providers            |
+
+---
+
+## Comparison with Other MCP Servers
+
+| Feature                    | VibeMCP    | gmail-mcp  | ms-365-mcp-server | google_workspace_mcp |
+|:---------------------------|:----------:|:----------:|:------------------:|:--------------------:|
+| Gmail                      | 8 tools    | 60+ tools  | -                  | 80+ tools            |
+| Outlook Mail               | 8 tools    | -          | 90+ tools          | -                    |
+| Google Calendar             | 4 tools    | -          | -                  | included             |
+| Outlook Calendar            | 5 tools    | -          | included           | -                    |
+| **Unified (both providers)** | **Yes**  | No         | No                 | No                   |
+| **TOON output**            | **Yes**    | No         | No                 | No                   |
+| **Multi-account**          | **Native** | No         | No                 | Manual               |
+| **Cross-account search**   | **Yes**    | No         | No                 | No                   |
+| Token optimization         | **51% avg**| None       | None               | None                 |
+
+Existing TOON MCP servers (like `toon-mcp`) are generic JSON-to-TOON converters. VibeMCP encodes at the source level, selecting optimal fields per data type.
+
+---
+
+## TOON Format
+
+TOON (Token-Oriented Object Notation) encodes structured data as a header + tab-delimited rows:
+
+```
+typeName[count]{field1,field2,field3}
+value1a	value1b	value1c
+value2a	value2b	value2c
+```
+
+- **Header** `typeName[count]{fields}` declares the schema once
+- **Rows** are tab-separated values, one per line, no repeated keys
+
+For single objects, TOON uses key-value format:
+
+```
+message:
+  id: msg001
+  subject: Meeting Tomorrow
+  from: john@example.com
+```
+
+**Why TOON beats JSON for LLMs:**
+
+1. **No repeated keys** — JSON repeats `"subject"`, `"from"`, `"date"` for every item. TOON declares fields once in the header.
+2. **No syntax noise** — No `{`, `}`, `[`, `]`, `"`, `,` characters consuming tokens.
+3. **Self-describing schema** — The `[count]{fields}` header tells the LLM what to expect, improving parsing accuracy.
+4. **JSON fallback** — Every tool accepts `format: "json"` for debugging or downstream processing.
+
+See **[TOON.md](TOON.md)** for detailed documentation on nested object handling, schema evolution, and MCP client compatibility.
+
+---
+
 ## Architecture
 
 ```
 src/
-  index.ts              # MCP server entry point (StdioServerTransport)
-  cli.ts                # CLI for auth management
-  config.ts             # Environment, account registry, scopes
+  index.ts                # MCP server entry point (StdioServerTransport)
+  cli.ts                  # CLI for auth management
+  config.ts               # Environment, account registry, scopes
   auth/
-    google.ts           # Google OAuth2 with local callback server (port 4100)
-    microsoft.ts        # Microsoft MSAL Device Code Flow
-    store.ts            # Token file I/O helpers
+    google.ts             # Google OAuth2 with local callback server (port 4100)
+    microsoft.ts          # Microsoft MSAL Device Code Flow
+    store.ts              # Token file I/O helpers
   services/
-    gmail.ts            # Gmail API service (googleapis)
-    ms-mail.ts          # Microsoft Graph Mail (native fetch)
-    google-calendar.ts  # Google Calendar API service
-    ms-calendar.ts      # Microsoft Graph Calendar (native fetch)
-    cache.ts            # Service instance cache (10-min TTL)
+    gmail.ts              # Gmail API service (googleapis)
+    ms-mail.ts            # Microsoft Graph Mail (native fetch)
+    google-calendar.ts    # Google Calendar API service
+    ms-calendar.ts        # Microsoft Graph Calendar (native fetch)
+    cache.ts              # Service instance cache (10-min TTL)
   tools/
-    admin.ts            # Account management tools
-    gmail.ts            # Gmail MCP tool handlers
-    outlook.ts          # Outlook MCP tool handlers
-    calendar.ts         # Unified calendar tools (auto-detects provider)
-    unified.ts          # Cross-account aggregation tools
+    admin.ts              # Account management tools (7)
+    gmail.ts              # Gmail tool handlers (8)
+    outlook.ts            # Outlook tool handlers (8)
+    calendar.ts           # Unified calendar tools (5)
+    unified.ts            # Cross-account aggregation (3)
   toon/
-    encoder.ts          # TOON serialization (encodeToon, formatOutput)
-    types.ts            # ToonOptions interface
+    encoder.ts            # TOON serialization (encodeToon, formatOutput)
+    types.ts              # ToonOptions interface
   utils/
-    logger.ts           # stderr-safe logging (protects JSON-RPC stdout)
-    errors.ts           # Error categories and formatting
+    logger.ts             # stderr-safe logging (protects JSON-RPC stdout)
+    errors.ts             # Error categories and formatting
 ```
 
-### Key Design Decisions
+**Key design decisions:**
 
-- **stderr-safe logging**: `console.log` is redirected to `console.error` at import time, ensuring stdout is reserved for MCP JSON-RPC messages
-- **Static factory pattern**: Services use `ServiceClass.create(email)` instead of constructors because Microsoft auth is async
-- **Provider auto-detection**: Calendar tools check the account registry to determine if an email is Google or Microsoft, then route to the correct service
-- **Service cache with TTL**: Authenticated service instances are cached for 10 minutes to avoid repeated token acquisition (saves 200-400ms per call)
+- **stderr-safe logging** — `console.log` redirected to `console.error` at import time, keeping stdout clean for MCP JSON-RPC
+- **Static factory pattern** — Services use `ServiceClass.create(email)` because auth initialization is async
+- **Provider auto-detection** — Calendar tools check the account registry to route to the correct service
+- **Service cache (10-min TTL)** — Authenticated instances are cached to avoid repeated token acquisition
 
 ---
 
 ## Auth Setup
 
-### Google OAuth Setup
+<details>
+<summary><strong>Google OAuth Setup</strong></summary>
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
 2. Create a new OAuth 2.0 Client ID (Desktop Application)
@@ -271,7 +307,10 @@ src/
 - `https://mail.google.com/` (full Gmail access)
 - `https://www.googleapis.com/auth/calendar` (Calendar read/write)
 
-### Microsoft Auth Setup
+</details>
+
+<details>
+<summary><strong>Microsoft Auth Setup</strong></summary>
 
 1. Go to [Azure Portal > App Registrations](https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade)
 2. Register a new application (any name)
@@ -286,86 +325,26 @@ src/
 
 Personal accounts (hotmail/outlook/live) automatically exclude Teams scopes.
 
----
-
-## TOON Format
-
-TOON (Token-Oriented Object Notation) encodes structured data as a header + tab-delimited rows:
-
-```
-typeName[count]{field1,field2,field3}
-value1a	value1b	value1c
-value2a	value2b	value2c
-```
-
-**Header**: `typeName[count]{fields}` declares the schema once
-**Rows**: Tab-separated values, one per line. No repeated keys.
-
-For single objects, TOON uses key-value format:
-
-```
-typeName
-key1: value1
-key2: value2
-```
-
-### Why TOON beats JSON for LLMs
-
-1. **No repeated keys** - JSON repeats `"subject"`, `"from"`, `"date"` for every item. TOON declares fields once in the header.
-2. **No syntax noise** - No `{`, `}`, `[`, `]`, `"`, `,` characters consuming tokens.
-3. **Schema in header** - The `[count]{fields}` header tells the LLM what to expect, improving parsing accuracy.
-4. **Fallback to JSON** - Every tool accepts `format: "json"` for debugging or downstream JSON processing.
-
-See [TOON.md](TOON.md) for detailed documentation on how VibeMCP implements TOON, handles nested objects, schema evolution, and MCP client compatibility.
+</details>
 
 ---
 
 ## Development
 
 ```bash
-# Install dependencies
-npm install
-
-# Type check
-npx tsc --noEmit
-
-# Build
-npm run build
-
-# Dev mode (auto-reload)
-npm run dev
-
-# Run directly
-node dist/index.js
+npm install          # Install dependencies
+npx tsc --noEmit     # Type check
+npm run build        # Build
+npm run dev          # Dev mode (auto-reload)
+node dist/index.js   # Run directly
 ```
-
----
-
-## Contributing
-
-We welcome contributions! Here's how:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/slack-integration`)
-3. Make your changes
-4. Run type checking (`npx tsc --noEmit`)
-5. Commit and push
-6. Open a Pull Request
-
-### Areas for Contribution
-
-- **New service modules**: Slack, Todoist, Discord, Reddit
-- **TOON encoder improvements**: Better field selection per data type
-- **Semantic caching**: Cache frequent queries to reduce API calls
-- **Context compression**: ACON-based history optimization
-- **Tests**: Unit and integration tests
-- **Documentation**: Usage examples, video tutorials
 
 ---
 
 ## Roadmap
 
-### v0.1 - Foundation (Current)
+### v0.1 — Foundation (Current)
+
 - [x] Gmail (8 tools) with TOON output
 - [x] Outlook Mail (8 tools) with TOON output
 - [x] Google Calendar (4 tools)
@@ -373,52 +352,65 @@ We welcome contributions! Here's how:
 - [x] Multi-account authentication (Google OAuth + Microsoft Device Code)
 - [x] Unified cross-account tools (search, inbox, calendar)
 - [x] CLI for account management
-- [x] 51% average token savings vs JSON
+- [x] Published on [npm](https://www.npmjs.com/package/@vibetensor/vibemcp)
 
-### v0.2 - Polish
-- [ ] Attachment handling (upload/download)
+### v0.2 — Polish
+
+- [ ] Attachment handling (upload / download)
 - [ ] Google Calendar event update
-- [ ] Gmail label management (create/delete/apply)
-- [ ] Outlook category support
+- [ ] Gmail label management
 - [ ] Comprehensive test suite
-- [ ] npm package publish (`@vibetensor/vibemcp`)
 
-### v0.3 - Expand
+### v0.3 — Expand
+
 - [ ] Slack integration
 - [ ] Todoist integration
 - [ ] Semantic caching layer
-- [ ] Context compression (ACON)
 - [ ] Rate limiting
 
-### v1.0 - Production
-- [ ] Hosted OAuth (no user GCP/Azure setup needed)
+### v1.0 — Production
+
+- [ ] Hosted OAuth (no user GCP / Azure setup needed)
 - [ ] Teams chat integration
 - [ ] Google Drive / OneDrive
-- [ ] Admin dashboard
 - [ ] Enterprise SSO
 
 ---
 
-## Research References
+## Contributing
 
-- [MCP Specification](https://modelcontextprotocol.io) - Model Context Protocol
-- [TOON Format](https://github.com/toon-format/toon) - Token-Oriented Object Notation
-- [ACON: Context Compression](https://arxiv.org/abs/2510.00615) - 26-54% memory reduction
-- [MCP Security Best Practices](https://modelcontextprotocol.io/specification/draft/basic/security_best_practices)
+We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+**High-priority areas:**
+
+- Unit and integration tests
+- New service modules (Slack, Todoist, Discord)
+- TOON encoder improvements
+- Documentation and usage examples
 
 ---
 
-## Privacy & Data Handling
+## Privacy & Security
 
 VibeMCP is **fully self-hosted**. Your data never leaves your machine.
 
-- **No telemetry**: VibeMCP does not phone home, collect analytics, or send data to VibeTensor or any third party
-- **No hosted OAuth**: You create your own Google Cloud project and Azure App Registration. VibeTensor never sees your credentials
-- **Local token storage**: OAuth tokens are stored as local JSON files in your project directory. They are never transmitted
-- **No data retention**: VibeMCP is a passthrough — it fetches data from APIs on demand and returns it to your MCP client. Nothing is stored permanently except auth tokens needed for API access
-- **You own your credentials**: Your Google Client ID/Secret and Azure App Registration are yours. VibeTensor has no access to them
+| Guarantee               | Detail                                                                    |
+|:------------------------|:--------------------------------------------------------------------------|
+| **No telemetry**        | No analytics, no phone home, no data sent to VibeTensor or third parties  |
+| **No hosted OAuth**     | You create your own Google Cloud project and Azure App Registration       |
+| **Local token storage** | OAuth tokens stored as local JSON files, never transmitted                |
+| **No data retention**   | Passthrough only — fetches from APIs on demand, stores nothing            |
+| **You own everything**  | Your credentials, your data, your infrastructure                          |
 
-See [PRIVACY.md](PRIVACY.md) for full details.
+See [PRIVACY.md](PRIVACY.md) for full details and [SECURITY.md](SECURITY.md) for security policy.
+
+---
+
+## References
+
+- [MCP Specification](https://modelcontextprotocol.io) — Model Context Protocol
+- [TOON Format](https://github.com/toon-format/toon) — Token-Oriented Object Notation (v3.0)
+- [MCP Security Best Practices](https://modelcontextprotocol.io/specification/draft/basic/security_best_practices)
 
 ---
 
@@ -426,28 +418,22 @@ See [PRIVACY.md](PRIVACY.md) for full details.
 
 This project is **not affiliated with, endorsed by, or sponsored by Google or Microsoft**.
 
-- Gmail, Google Calendar, and Google Cloud are trademarks of Google LLC
-- Microsoft 365, Outlook, Azure, and Microsoft Graph are trademarks of Microsoft Corporation
-- VibeMCP uses these services' public APIs under their respective Terms of Service
+Gmail, Google Calendar, and Google Cloud are trademarks of Google LLC. Microsoft 365, Outlook, Azure, and Microsoft Graph are trademarks of Microsoft Corporation. VibeMCP uses these services' public APIs under their respective Terms of Service.
 
-Users are responsible for:
-- Creating their own API credentials (Google Cloud OAuth, Azure App Registration)
-- Complying with [Google APIs Terms of Service](https://developers.google.com/terms) and [Google API Services User Data Policy](https://developers.google.com/terms/api-services-user-data-policy)
-- Complying with [Microsoft APIs Terms of Use](https://learn.microsoft.com/en-us/legal/microsoft-apis/terms-of-use)
-- Providing a privacy policy when configuring their OAuth consent screens (templates provided in [PRIVACY.md](PRIVACY.md))
+Users are responsible for creating their own API credentials and complying with [Google APIs ToS](https://developers.google.com/terms), [Google API User Data Policy](https://developers.google.com/terms/api-services-user-data-policy), and [Microsoft APIs ToU](https://learn.microsoft.com/en-us/legal/microsoft-apis/terms-of-use).
 
 ---
 
 ## License
 
-**PolyForm Noncommercial 1.0.0** - [VibeTensor Private Limited](https://vibetensor.com)
+**[PolyForm Noncommercial 1.0.0](LICENSE)** — [VibeTensor Private Limited](https://vibetensor.com)
 
-This software is free for personal use, research, education, hobby projects, and noncommercial organizations. Commercial use requires a separate license from VibeTensor.
+Free for personal use, research, education, hobby projects, and noncommercial organizations. Commercial use requires a separate license from VibeTensor.
 
-See [LICENSE](LICENSE) for full text.
+---
 
-## About VibeTensor
-
-VibeTensor is a DPIIT-recognized AI startup from India building intelligent developer tools.
-
-- [Website](https://vibetensor.com) | [GitHub](https://github.com/VibeTensor) | [LinkedIn](https://linkedin.com/company/vibetensor)
+<p align="center">
+  Built by <a href="https://vibetensor.com">VibeTensor</a> — a DPIIT-recognized AI startup from India
+  <br>
+  <a href="https://vibetensor.com">Website</a> · <a href="https://github.com/VibeTensor">GitHub</a> · <a href="https://linkedin.com/company/vibetensor">LinkedIn</a>
+</p>
