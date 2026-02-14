@@ -15,7 +15,7 @@ We take the security of VibeMCP seriously. If you believe you have found a secur
 ### Please Do
 
 - **Report privately**: Use [GitHub Security Advisories](https://github.com/VibeTensor/vibemcp/security/advisories/new) to report vulnerabilities privately
-- **Email us**: Send details to security@vibetensor.com
+- **Email us**: Send details to info@vibetensor.com
 - **Provide details**: Include steps to reproduce, potential impact, and suggested fixes if any
 - **Give us time**: Allow reasonable time for us to address the issue before public disclosure
 
@@ -140,7 +140,7 @@ We thank the following researchers for responsibly disclosing vulnerabilities:
 
 ## Contact
 
-- **Security Email**: security@vibetensor.com
+- **Security Email**: info@vibetensor.com
 - **GitHub Security Advisories**: [Report here](https://github.com/VibeTensor/vibemcp/security/advisories/new)
 
 Thank you for helping keep VibeMCP and our users safe!

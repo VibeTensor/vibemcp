@@ -89,5 +89,5 @@ Since VibeMCP is open-source, changes to this privacy policy are tracked in the 
 
 ## Contact
 
-- **Email**: opensource@vibetensor.com
+- **Email**: info@vibetensor.com
 - **GitHub**: [https://github.com/VibeTensor/vibemcp](https://github.com/VibeTensor/vibemcp)

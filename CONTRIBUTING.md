@@ -156,7 +156,7 @@ Look for issues labeled `good first issue` for beginner-friendly tasks.
 ## Getting Help
 
 - **Discussions**: [GitHub Discussions](https://github.com/VibeTensor/vibemcp/discussions)
-- **Email**: opensource@vibetensor.com
+- **Email**: info@vibetensor.com
 
 ## Recognition
 
