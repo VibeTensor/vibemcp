@@ -316,6 +316,8 @@ key2: value2
 3. **Schema in header** - The `[count]{fields}` header tells the LLM what to expect, improving parsing accuracy.
 4. **Fallback to JSON** - Every tool accepts `format: "json"` for debugging or downstream JSON processing.
 
+See [TOON.md](TOON.md) for detailed documentation on how VibeMCP implements TOON, handles nested objects, schema evolution, and MCP client compatibility.
+
 ---
 
 ## Development
