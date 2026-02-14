@@ -8,7 +8,7 @@
 
 [TOON (Token-Oriented Object Notation)](https://github.com/toon-format/toon) is an open data format (v3.0, MIT licensed) designed to encode structured data with fewer tokens than JSON. It combines YAML-style indentation for nested objects with CSV-style tabular layout for uniform arrays.
 
-VibeMCP is the first email and calendar MCP server with native TOON output. Instead of converting JSON to TOON after the fact, VibeMCP encodes at the source level — selecting optimal fields per data type and flattening nested API responses before serialization.
+VibeMCP is the first email and calendar MCP server with native TOON output. Instead of converting JSON to TOON after the fact, VibeMCP encodes at the source level — selecting optimal fields per data type and transforming nested API responses into flat structures before serialization.
 
 ---
 
@@ -83,10 +83,15 @@ VibeMCP selects specific fields per data type rather than dumping all API respon
 | Data Type | TOON Fields | Excluded Fields |
 |-----------|-------------|-----------------|
 | Gmail messages (list) | `id, subject, from, date, snippet` | `to, cc, labelIds, threadId, body, internalDate, sizeEstimate` |
-| Gmail messages (detail) | All fields | None (full detail) |
-| Outlook messages (list) | `id, subject, from, receivedDateTime, bodyPreview` | `body, toRecipients, ccRecipients, categories, flag, importance` |
-| Calendar events | `id, summary, start, end, location, status` | `organizer, attendees, recurrence, reminders, conferenceData` |
-| Labels/Folders | `id, name, type` | `messagesTotal, messagesUnread, color` |
+| Gmail messages (detail) | All fields (defaults to JSON) | None (full detail) |
+| Outlook messages (list) | `id, subject, from, receivedDateTime, isRead, preview` | `body, toRecipients, ccRecipients, hasAttachments, importance` |
+| Outlook search results | `id, subject, from, receivedDateTime, preview` | Same as list, plus `isRead` |
+| Google Calendar events | `id, summary, start, end, location, organizer` | `attendees, recurrence, reminders, conferenceData, description` |
+| Outlook Calendar events | `id, subject, start, end, location, organizer` | `attendees, body, importance, isOnlineMeeting` |
+| Gmail labels | `id, name, type` | `messagesTotal, messagesUnread, color` |
+| Outlook folders | `id, displayName, totalItemCount, unreadItemCount` | `childFolderCount, parentFolderId` |
+
+Note: Google Calendar uses `summary` for event titles while Outlook uses `subject`. Google Calendar flattens `start`/`end` to date strings; Outlook Calendar preserves the `{dateTime, timeZone}` structure which `encodeToonSingle` serializes as inline JSON.
 
 ### Delimiter and Options
 
@@ -104,11 +109,11 @@ VibeMCP uses **tab** as the default delimiter because email subjects and calenda
 Every VibeMCP tool accepts a `format` parameter:
 
 ```
-format: "toon"  → TOON output (default, saves tokens)
+format: "toon"  → TOON output (saves tokens)
 format: "json"  → Standard JSON output (for debugging or downstream processing)
 ```
 
-No configuration needed. Switch per-call as needed.
+List tools (`gmail_list_messages`, `outlook_list_messages`, `calendar_list_events`, etc.) default to `toon`. Detail tools (`gmail_get_message`, `outlook_get_message`) default to `json` because single-object detail views benefit less from TOON and developers often need JSON for inspection. Switch per-call as needed.
 
 ---
 
@@ -136,18 +141,25 @@ API responses from Google and Microsoft contain deeply nested structures:
 }
 ```
 
-### VibeMCP's Approach: Flatten at the Source
+### VibeMCP's Approach: Transform and Flatten in the Service Layer
 
-TOON v3.0 supports nested objects via indentation (like YAML). However, VibeMCP takes a different approach — it **flattens nested data in the service layer** before it reaches the TOON encoder.
+TOON v3.0 supports nested objects via indentation (like YAML). VibeMCP takes a simpler approach — each service layer transforms raw API responses into typed objects, extracting nested values into flat fields where possible.
 
-For calendar events, VibeMCP's service extracts:
-- `start.dateTime` → `start` (flat string)
-- `end.dateTime` → `end` (flat string)
-- `attendees[].emailAddress.address` → dropped in list view, included in detail view
+**Google Calendar** (full flattening):
+- `start.dateTime` or `start.date` → `start` (flat string)
+- `end.dateTime` or `end.date` → `end` (flat string)
+- `organizer.email` → `organizer` (flat string)
+- `attendees[].email` → `attendees` (string array, dropped in list view)
 
-This is why calendar events show 70% token savings — the flattening removes multiple levels of nesting and redundant structure.
+**Outlook / Microsoft Graph** (partial flattening):
+- `from.emailAddress.address` → `from` (flat string)
+- `organizer.emailAddress.address` → `organizer` (flat string)
+- `start` → `{ dateTime, timeZone }` (still nested — simplified but not flat)
+- `end` → `{ dateTime, timeZone }` (still nested)
 
-For **detail views** (single objects like `gmail_get_message`), nested values that cannot be meaningfully flattened (like an array of attachment metadata) are JSON-serialized inline:
+Google Calendar achieves 70% savings because its service layer produces fully flat records. Outlook Calendar savings are lower because `start`/`end` retain a nested structure — when encoded in TOON tabular format, `escapeValue` serializes these nested objects as JSON strings inline.
+
+**For detail views** (single objects like `gmail_get_message`), nested values that cannot be meaningfully flattened (like an array of attachment metadata) are JSON-serialized inline by `encodeToonSingle`:
 
 ```
 message:
@@ -156,9 +168,9 @@ message:
   attachments: [{"attachmentId":"att1","filename":"slides.pdf","mimeType":"application/pdf","size":245000}]
 ```
 
-This is a deliberate trade-off:
-- **List views** (10-50 items): Fully tabular TOON. Maximum token savings.
-- **Detail views** (single item): Key-value TOON with inline JSON for complex nested fields. Moderate token savings, full data fidelity.
+The trade-off by data shape:
+- **List views** (10-50 items): Tabular TOON. Maximum token savings. Fields are pre-selected per data type.
+- **Detail views** (single item): Key-value TOON with inline JSON for nested fields. Detail tools default to JSON output since the savings are smaller and developers often need JSON for inspection.
 
 ### Why Not Full TOON Nesting?
 
@@ -176,9 +188,9 @@ event:
     Jane,jane@example.com,tentative
 ```
 
-VibeMCP avoids this for two reasons:
+VibeMCP avoids full TOON nesting for two reasons:
 
-1. **Flattening is cheaper.** For list views, flattening `start.dateTime` to a single `start` field and encoding 10 events in a tabular format saves more tokens than encoding 10 fully-nested TOON objects with indentation.
+1. **Tabular is cheaper.** For list views, transforming `start.dateTime` to a flat `start` field and encoding 10 events in a single table saves more tokens than encoding 10 individually-nested TOON objects with indentation.
 
 2. **LLM parsing reliability.** LLMs parse tabular data (header + rows) more reliably than indentation-based nesting. The TOON spec itself notes that tabular format achieves higher accuracy in benchmarks.
 
@@ -264,7 +276,7 @@ Measured on live accounts with real data, February 2026:
 | Google Calendar — 11 events | 1,462 | 441 | **70%** |
 | **Combined** | **3,903** | **1,904** | **51%** |
 
-Calendar events show the highest savings because the original Google Calendar API response contains deeply nested objects (`start.dateTime`, `start.timeZone`, `attendees[].emailAddress.address`, `conferenceData.entryPoints[].uri`) that VibeMCP flattens to a single row of primitive values.
+Calendar events show the highest savings because the original Google Calendar API response contains deeply nested objects (`start.dateTime`, `start.timeZone`, `attendees[].email`, `organizer.email`, `conferenceData.entryPoints[].uri`) that VibeMCP's Google Calendar service transforms into a flat row of primitive values.
 
 ### Why Savings Vary
 
@@ -285,11 +297,11 @@ VibeMCP implements a subset of [TOON v3.0](https://github.com/toon-format/spec):
 | Tab delimiter | Yes (default) | Safe for natural language content |
 | Comma delimiter | Configurable | Available via `ToonOptions` |
 | Pipe delimiter | Configurable | Available via `ToonOptions` |
-| Nested objects (indentation) | No | VibeMCP flattens at source instead |
+| Nested objects (indentation) | No | Service layer transforms nested data; `encodeToonSingle` uses inline JSON for remaining nested values |
 | Non-uniform arrays (hyphen markers) | No | Not needed for email/calendar data |
 | Path folding (`a.b.c: value`) | No | Not needed for current data types |
 | Quoted strings | Yes | Auto-applied when values contain delimiters |
-| Escape sequences (`\n`, `\t`, `\"`, `\\`) | Yes | Per TOON v3.0 spec |
+| Escape sequences (`\\`, `\"`, `\n`, `\r`) | Yes | Per TOON v3.0 spec |
 | Count validation `[N]` | Yes | Count always included in header |
 
 ---

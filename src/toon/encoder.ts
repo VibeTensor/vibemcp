@@ -17,6 +17,7 @@ function escapeValue(value: unknown, delimiter: string): string {
   if (value === null || value === undefined) return 'null';
   if (typeof value === 'boolean') return value ? 'true' : 'false';
   if (typeof value === 'number') return String(value);
+  if (typeof value === 'object') return escapeValue(JSON.stringify(value), delimiter);
 
   const str = String(value);
   if (str === '') return '""';
