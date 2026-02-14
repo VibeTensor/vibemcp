@@ -2,7 +2,7 @@
 
 **Token-Optimized Unified MCP Server for Gmail & Microsoft 365**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: PolyForm Noncommercial](https://img.shields.io/badge/License-PolyForm%20Noncommercial-purple.svg)](https://polyformproject.org/licenses/noncommercial/1.0.0/)
 [![Node.js Version](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
 [![MCP Version](https://img.shields.io/badge/MCP-1.0-blue)](https://modelcontextprotocol.io)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.5-blue)](https://www.typescriptlang.org)
@@ -438,7 +438,9 @@ Users are responsible for:
 
 ## License
 
-MIT License - [VibeTensor Private Limited](https://vibetensor.com)
+**PolyForm Noncommercial 1.0.0** - [VibeTensor Private Limited](https://vibetensor.com)
+
+This software is free for personal use, research, education, hobby projects, and noncommercial organizations. Commercial use requires a separate license from VibeTensor.
 
 See [LICENSE](LICENSE) for full text.
 
