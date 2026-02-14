@@ -47,36 +47,46 @@ When reporting a vulnerability, please include:
   - Medium: 2-4 weeks
   - Low: Next release cycle
 
-## Security Measures
+## Security Architecture
 
-VibeMCP implements the following security measures:
+### Self-Hosted Model
 
-### Authentication & Authorization
+VibeMCP runs entirely on your local machine. There is no VibeTensor-hosted backend, no telemetry, and no data transmission to third parties.
 
-- OAuth 2.1 with PKCE for all authentication flows
-- No token passthrough (tokens are validated server-side)
-- Per-account isolated credential storage
-- Automatic token refresh with secure storage
+### Authentication
+
+- **Google**: Standard OAuth 2.0 with localhost redirect (`http://localhost:4100/code`). Users create their own Google Cloud OAuth client
+- **Microsoft**: MSAL Device Code Flow. Users create their own Azure App Registration
+- Per-account isolated token storage (one file per account)
+- Automatic token refresh via googleapis and MSAL libraries
+
+### Credential Storage
+
+- OAuth tokens stored as local JSON files in the project directory
+- Google tokens: `.oauth2.{email}.json`
+- Microsoft tokens: `~/.vibemcp-ms-cache.json` (MSAL persistent cache)
+- Account registry: `accounts.json`
+- **All credential files are excluded from git via `.gitignore`**
 
 ### Input Validation
 
-- All inputs are validated and sanitized
-- Parameterized queries (no string concatenation)
-- Protection against prompt injection attacks
-- Tool parameter validation using Zod schemas
+- All tool parameters validated using Zod schemas
+- Type coercion for MCP protocol compatibility
+- No shell command execution from user input
+- No dynamic code evaluation
 
-### Data Protection
+### Data Flow
 
-- Credentials stored securely (encrypted at rest)
-- No sensitive data in logs
-- Minimal data retention
-- HTTPS enforcement for all external communications
+- VibeMCP is a passthrough: it fetches data from Google/Microsoft APIs and returns it to the MCP client
+- No persistent data storage beyond auth tokens
+- No caching of email content or calendar data
+- stderr-safe logging ensures no sensitive data leaks to stdout (which carries MCP JSON-RPC messages)
 
-### Human-in-the-Loop
+### Token Safety
 
-- Destructive operations require explicit confirmation
-- Dangerous actions are logged and auditable
-- Rate limiting on sensitive operations
+- OAuth tokens are never included in MCP tool responses
+- Tokens are never logged (console.log redirected to stderr, and token values are not logged)
+- Service instances are cached in-memory with 10-minute TTL (tokens stay in memory only while the process runs)
 
 ## Known Security Considerations
 
@@ -84,16 +94,41 @@ VibeMCP implements the following security measures:
 
 As documented in MCP security research:
 
-1. **Tool Poisoning**: We use a curated, verified tool set
-2. **Prompt Injection**: Input sanitization on all tool parameters
-3. **Token Leakage**: Tokens never exposed in tool responses
-4. **Command Injection**: No shell command execution from user input
+1. **Tool Poisoning**: VibeMCP uses a curated, verified tool set (31 tools, all defined in source)
+2. **Token Leakage**: OAuth tokens are never exposed in tool responses
+3. **Command Injection**: No shell command execution from user input
+
+### Credential File Permissions
+
+OAuth token files are created with default file permissions. On shared systems, users should ensure these files are readable only by their user account:
+
+```bash
+# Linux/macOS
+chmod 600 .oauth2.*.json
+chmod 600 accounts.json
+```
 
 ### Third-Party Dependencies
 
 - Dependencies are regularly updated via Dependabot
+- Key runtime dependencies: `googleapis`, `@azure/msal-node`, `@modelcontextprotocol/sdk`, `zod`
 - Security advisories are monitored
-- npm audit runs on every CI build
+
+## Files That Should Never Be Committed
+
+The following files contain sensitive credentials and are excluded by `.gitignore`:
+
+| File Pattern | Contents |
+|-------------|----------|
+| `.env` | Google/Microsoft API credentials |
+| `.oauth2.*.json` | Google OAuth access + refresh tokens |
+| `.vibemcp-ms-cache.json` | Microsoft MSAL token cache |
+| `accounts.json` | Registered account emails |
+
+If you accidentally commit any of these files:
+1. Immediately revoke the exposed credentials
+2. Remove the file from git history (`git filter-branch` or `BFG Repo-Cleaner`)
+3. Rotate all affected API keys and tokens
 
 ## Security Acknowledgments
 
@@ -107,6 +142,5 @@ We thank the following researchers for responsibly disclosing vulnerabilities:
 
 - **Security Email**: security@vibetensor.com
 - **GitHub Security Advisories**: [Report here](https://github.com/VibeTensor/vibemcp/security/advisories/new)
-- **PGP Key**: Available upon request
 
 Thank you for helping keep VibeMCP and our users safe!

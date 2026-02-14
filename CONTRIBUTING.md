@@ -4,7 +4,7 @@ Thank you for your interest in contributing to VibeMCP! This document provides g
 
 ## Code of Conduct
 
-By participating in this project, you agree to maintain a respectful and inclusive environment for everyone.
+By participating in this project, you agree to our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## How to Contribute
 
@@ -30,11 +30,9 @@ By participating in this project, you agree to maintain a respectful and inclusi
 1. Fork the repository
 2. Create a feature branch: `git checkout -b feature/your-feature`
 3. Make your changes
-4. Write/update tests
-5. Run tests: `npm test`
-6. Run linter: `npm run lint`
-7. Commit with clear messages
-8. Push and create a Pull Request
+4. Run type checking: `npx tsc --noEmit`
+5. Commit with clear messages
+6. Push and create a Pull Request
 
 ## Development Setup
 
@@ -48,34 +46,57 @@ npm install
 
 # Create environment file
 cp .env.example .env
-
-# Run in development mode
-npm run dev
-
-# Run tests
-npm test
+# Edit .env with your Google/Microsoft credentials
 
 # Build
 npm run build
+
+# Run directly (starts MCP server on stdio)
+node dist/index.js
+
+# Dev mode (auto-reload)
+npm run dev
+
+# Type check
+npx tsc --noEmit
 ```
+
+### Authentication Setup
+
+You need your own API credentials to develop and test:
+
+1. **Google**: Create an OAuth 2.0 Client ID at [Google Cloud Console](https://console.cloud.google.com/apis/credentials). See README for details.
+2. **Microsoft**: Register an app at [Azure Portal](https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade). See README for details.
 
 ## Project Structure
 
 ```
-vibemcp/
-├── src/
-│   ├── index.ts          # Entry point
-│   ├── server.ts         # MCP server implementation
-│   ├── auth/             # OAuth authentication
-│   ├── providers/        # Gmail, Outlook providers
-│   ├── tools/            # MCP tool definitions
-│   ├── toon/             # TOON encoder/decoder
-│   ├── compression/      # Context compression (ACON)
-│   ├── cache/            # Semantic caching
-│   └── utils/            # Utilities
-├── tests/                # Test files
-├── docs/                 # Documentation
-└── examples/             # Usage examples
+src/
+├── index.ts              # MCP server entry point (StdioServerTransport)
+├── cli.ts                # CLI for auth management
+├── config.ts             # Environment, account registry, scopes
+├── auth/
+│   ├── google.ts         # Google OAuth2 with local callback server
+│   ├── microsoft.ts      # Microsoft MSAL Device Code Flow
+│   └── store.ts          # Token file I/O helpers
+├── services/
+│   ├── gmail.ts          # Gmail API service (googleapis)
+│   ├── ms-mail.ts        # Microsoft Graph Mail (native fetch)
+│   ├── google-calendar.ts # Google Calendar API service
+│   ├── ms-calendar.ts    # Microsoft Graph Calendar (native fetch)
+│   └── cache.ts          # Service instance cache (10-min TTL)
+├── tools/
+│   ├── admin.ts          # Account management tools (7)
+│   ├── gmail.ts          # Gmail tool handlers (8)
+│   ├── outlook.ts        # Outlook tool handlers (8)
+│   ├── calendar.ts       # Unified calendar tools (5)
+│   └── unified.ts        # Cross-account aggregation tools (3)
+├── toon/
+│   ├── encoder.ts        # TOON serialization (encodeToon, formatOutput)
+│   └── types.ts          # ToonOptions interface
+└── utils/
+    ├── logger.ts         # stderr-safe logging (protects JSON-RPC stdout)
+    └── errors.ts         # Error categories and formatting
 ```
 
 ## Coding Standards
@@ -89,10 +110,16 @@ vibemcp/
 
 ### Style
 
-- Use ESLint and Prettier configurations
 - 2 spaces for indentation
 - Single quotes for strings
-- No trailing semicolons (configurable)
+- Semicolons at end of statements
+
+### Key Patterns
+
+- **stderr-safe logging**: Never use `console.log` for debug output. The `utils/logger.ts` module redirects console.log to stderr. Stdout is reserved for MCP JSON-RPC.
+- **Static factory pattern**: Services use `ServiceClass.create(email)` instead of constructors because auth initialization is async.
+- **Service caching**: Use `getServiceAsync()` from `services/cache.ts` to avoid redundant auth per tool call.
+- **Zod coercion**: Use `z.coerce.number()` instead of `z.number()` for numeric params (MCP sends them as strings).
 
 ### Commits
 
@@ -106,26 +133,20 @@ test: add unit tests for TOON encoder
 refactor: simplify multi-account handling
 ```
 
-### Testing
-
-- Write unit tests for new features
-- Maintain >80% code coverage
-- Use descriptive test names
-
 ## Areas for Contribution
 
 ### High Priority
 
-- [ ] Gmail tool implementations
-- [ ] Outlook tool implementations
-- [ ] TOON encoder optimization
-- [ ] Unit test coverage
+- [ ] Unit and integration tests
+- [ ] Attachment handling (upload/download)
+- [ ] Google Calendar event update support
+- [ ] Gmail label management (create/delete/apply)
 
 ### Medium Priority
 
-- [ ] Documentation improvements
-- [ ] Example configurations
-- [ ] Performance benchmarks
+- [ ] Slack integration (new service module)
+- [ ] Todoist integration
+- [ ] TOON encoder improvements (better field selection)
 - [ ] Error handling improvements
 
 ### Good First Issues
@@ -134,7 +155,6 @@ Look for issues labeled `good first issue` for beginner-friendly tasks.
 
 ## Getting Help
 
-- **Discord**: [Join our community](https://discord.gg/vibetensor)
 - **Discussions**: [GitHub Discussions](https://github.com/VibeTensor/vibemcp/discussions)
 - **Email**: opensource@vibetensor.com
 
@@ -143,6 +163,5 @@ Look for issues labeled `good first issue` for beginner-friendly tasks.
 Contributors will be recognized in:
 - README.md Contributors section
 - Release notes
-- Our website
 
 Thank you for contributing to VibeMCP!

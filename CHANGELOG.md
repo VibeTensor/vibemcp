@@ -5,39 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.0] - 2026-02-14
 
 ### Added
-- Initial project setup
-- MCP server skeleton with TypeScript
-- TOON format integration planning
-- Gmail tool definitions (35+ tools)
-- Outlook/MS365 tool definitions (35+ tools)
-- Calendar tool definitions (15+ tools)
-- Unified cross-account tool definitions
-- Multi-account authentication support design
-- OAuth 2.1 + PKCE authentication flow
-- Context compression (ACON-inspired) planning
-- Semantic caching layer planning
-- Comprehensive documentation (README, CONTRIBUTING, SECURITY)
-- GitHub Actions CI/CD pipeline
-- CodeRabbit integration for AI code reviews
-- Issue and PR templates
+- **31 MCP tools** across 5 modules: admin (7), gmail (8), outlook (8), calendar (5), unified (3)
+- **TOON output format**: 51% average token savings vs JSON (38% email, 70% calendar)
+- **Gmail integration**: list/search messages, get message, send, reply, create draft, list labels, list/get threads
+- **Outlook integration**: list messages, get message, send, reply, forward, list folders, move message, search
+- **Google Calendar**: list calendars, list events, create event, delete event
+- **Outlook Calendar**: list calendars, list events, create event, update event, delete event
+- **Unified tools**: cross-account search, aggregated inbox, merged calendar view
+- **Multi-account authentication**: Google OAuth2 (browser flow) + Microsoft Device Code Flow
+- **Account management**: add/remove accounts, status check, provider auto-detection
+- **CLI**: `vibemcp auth google`, `vibemcp auth microsoft`, `vibemcp accounts list`
+- **Service cache**: 10-minute TTL for authenticated service instances
+- **stderr-safe logging**: protects MCP JSON-RPC stdout channel
+- **Privacy documentation**: PRIVACY.md with data handling details
+- **Security documentation**: SECURITY.md with architecture details
 
 ### Security
-- Security policy (SECURITY.md)
-- Input validation schemas using Zod
-- OAuth 2.1 with PKCE (no token passthrough)
-
-## [0.1.0] - TBD
-
-### Added
-- First public release
-- Core MCP server implementation
-- Gmail basic operations
-- Outlook basic operations
-- TOON encoder/decoder
-- Multi-account token storage
+- All credential files excluded from git (.env, .oauth2.*.json, accounts.json, MSAL cache)
+- Input validation on all tool parameters via Zod schemas
+- OAuth tokens never exposed in MCP tool responses
+- No telemetry, no data transmission to third parties
 
 ---
 
@@ -45,10 +35,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Description |
 |---------|------|-------------|
-| 0.1.0 | TBD | Initial release with Gmail + Outlook support |
-| 0.2.0 | TBD | Calendar integration + context compression |
-| 0.3.0 | TBD | Semantic caching + performance optimizations |
-| 1.0.0 | TBD | Production-ready release |
+| 0.1.0 | 2026-02-14 | Initial release: Gmail + Outlook + Calendar + TOON |
+| 0.2.0 | TBD | Attachments, label management, test suite |
+| 0.3.0 | TBD | Slack, Todoist, semantic caching |
+| 1.0.0 | TBD | Hosted OAuth, npm package, enterprise features |
 
-[Unreleased]: https://github.com/VibeTensor/vibemcp/compare/v0.1.0...HEAD
 [0.1.0]: https://github.com/VibeTensor/vibemcp/releases/tag/v0.1.0

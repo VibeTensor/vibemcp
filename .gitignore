@@ -23,6 +23,13 @@ credentials.json
 token.json
 .vibemcp/
 
+# OAuth tokens and account data (NEVER commit these)
+.oauth2.*.json
+accounts.json
+.vibemcp-ms-cache.json
+.msal-*.json
+*.cache.json
+
 # IDE
 .idea/
 .vscode/
