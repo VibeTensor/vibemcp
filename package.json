@@ -17,7 +17,10 @@
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "format": "prettier --write src/",
-    "prepare": "npm run build"
+    "prepare": "npm run build",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "keywords": [
     "mcp",
@@ -67,7 +70,8 @@
     "prettier": "^3.0.0",
     "ts-jest": "^29.0.0",
     "tsx": "^4.0.0",
-    "typescript": "^5.5.0"
+    "typescript": "^5.5.0",
+    "vitepress": "^1.6.4"
   },
   "files": [
     "dist/",

@@ -1,4 +1,5 @@
 <p align="center">
+  <img src="vmcp_icon.svg" alt="VibeMCP" width="120" height="120">
   <h1 align="center">VibeMCP</h1>
   <p align="center">
     <strong>Token-Optimized Unified MCP Server for Gmail & Microsoft 365</strong>
@@ -12,6 +13,9 @@
   </p>
   <p align="center">
     One server. Two ecosystems. Half the tokens.
+  </p>
+  <p align="center">
+    <a href="https://vibemcp.vibetensor.com">Documentation</a> · <a href="https://vibemcp.vibetensor.com/guide/getting-started">Getting Started</a> · <a href="https://vibemcp.vibetensor.com/reference/tools">Tools Reference</a>
   </p>
 </p>
 
@@ -74,67 +78,64 @@ Calendar events show 70% savings because the raw Google Calendar API response ha
 
 ## Quick Start
 
-### 1. Install
+### 1. Add to your MCP client
 
-```bash
-git clone https://github.com/VibeTensor/vibemcp.git
-cd vibemcp
-npm install && npm run build
+**Claude Code** (`~/.claude.json`):
+
+```json
+{
+  "mcpServers": {
+    "vibemcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@vibetensor/vibemcp"]
+    }
+  }
+}
 ```
 
-Or via npm:
+### 2. Configure credentials
 
-```bash
-npm install @vibetensor/vibemcp
+Create a `.env` file:
+
 ```
-
-### 2. Configure
-
-Create `.env` in the project root:
-
-```env
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
 MICROSOFT_CLIENT_ID=your-azure-client-id
 MICROSOFT_TENANT_ID=common
 ```
 
-### 3. Add to your MCP client
+See the [Configuration Guide](https://vibemcp.vibetensor.com/reference/configuration) for Google Cloud and Azure setup.
 
-**Claude Code** (`~/.claude.json` > `mcpServers`):
+### 3. Authenticate
 
-```json
-{
-  "vibemcp": {
-    "type": "stdio",
-    "command": "node",
-    "args": ["/path/to/vibemcp/dist/index.js"]
-  }
-}
-```
-
-### 4. Authenticate
-
-Use the built-in MCP tools:
+Through your AI assistant:
 
 ```
-> Add my Google account
-  → add_google_account opens browser for OAuth
-  → complete_google_auth finishes the flow
-
-> Add my Microsoft account
-  → add_microsoft_account returns a device code
-  → Enter the code at microsoft.com/devicelogin
-  → complete_microsoft_auth finishes the flow
+> Add my Google account     → opens browser for OAuth
+> Add my Microsoft account  → prints device code for microsoft.com/devicelogin
 ```
 
-Or use the CLI:
+Or via CLI:
 
 ```bash
-npx tsx src/cli.ts auth google your@gmail.com
-npx tsx src/cli.ts auth microsoft your@outlook.com
-npx tsx src/cli.ts accounts list
+npx @vibetensor/vibemcp auth google your@gmail.com
+npx @vibetensor/vibemcp auth microsoft your@outlook.com
 ```
+
+### 4. Use
+
+```
+> Show my latest emails
+```
+
+```
+messages[10]{id,subject,from,date,snippet}
+19485abc  Team standup notes  alice@company.com  2026-02-16  Here are the notes...
+28ef9d01  Invoice #4521       billing@vendor.com 2026-02-15  Your invoice for...
+```
+
+Every tool supports `format: "json"` for standard JSON output.
 
 ---
 
@@ -403,6 +404,20 @@ VibeMCP is **fully self-hosted**. Your data never leaves your machine.
 | **You own everything**  | Your credentials, your data, your infrastructure                          |
 
 See [PRIVACY.md](PRIVACY.md) for full details and [SECURITY.md](SECURITY.md) for security policy.
+
+---
+
+## Troubleshooting
+
+| Issue | Solution |
+|:------|:---------|
+| "No accounts connected" | Run `list_accounts` to check. Authenticate at least one account. |
+| Google OAuth fails | Ensure `http://localhost:4100/code` is an authorized redirect URI. Enable Gmail + Calendar APIs. |
+| Microsoft device code expires | Codes last ~15 minutes. Run `add_microsoft_account` again for a fresh code. |
+| AADSTS errors | Enable "Allow public client flows" in Azure Portal > App Registration > Authentication. |
+| Token file issues | Delete `.oauth2.{email}.json` and re-authenticate. |
+
+Full troubleshooting guide: [vibemcp.vibetensor.com/guide/getting-started](https://vibemcp.vibetensor.com/guide/getting-started#troubleshooting)
 
 ---
 

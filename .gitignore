@@ -66,4 +66,6 @@ temp/
 
 # Documentation build
 docs/_build/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
 site/

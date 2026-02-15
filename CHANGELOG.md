@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.1] - 2026-02-16
+
+### Added
+- **VMCP logo**: geometric 11x11 grid design with 4-letter quadrant layout (V, M, C, P)
+  - SVG variants: dark, light, gold
+  - PNG variants: gold, white (512x512)
+  - App icon: sky blue rounded square with white lettermarks
+  - Favicon SVG for documentation site
+- **Documentation website** (VitePress) at [vibemcp.vibetensor.com](https://vibemcp.vibetensor.com)
+  - Guide: getting started, TOON format, multi-account auth
+  - Reference: tools, CLI, configuration, output format
+  - Ecosystem: architecture, integrations, roadmap
+
+### Improved
+- README: added logo, npx-first quick start, troubleshooting section, docs site links
+
 ## [0.1.0] - 2026-02-14
 
 ### Added
@@ -35,9 +51,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 0.1.1 | 2026-02-16 | Logo, documentation site, README improvements |
 | 0.1.0 | 2026-02-14 | Initial release: Gmail + Outlook + Calendar + TOON |
 | 0.2.0 | TBD | Attachments, label management, test suite |
 | 0.3.0 | TBD | Slack, Todoist, semantic caching |
 | 1.0.0 | TBD | Hosted OAuth, npm package, enterprise features |
 
+[0.1.1]: https://github.com/VibeTensor/vibemcp/releases/tag/v0.1.1
 [0.1.0]: https://github.com/VibeTensor/vibemcp/releases/tag/v0.1.0
