@@ -1,6 +1,6 @@
 {
   "name": "@vibetensor/vibemcp",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Token-Optimized Unified MCP Server for Gmail & Microsoft 365",
   "type": "module",
   "main": "dist/index.js",
@@ -48,7 +48,7 @@
   "bugs": {
     "url": "https://github.com/VibeTensor/vibemcp/issues"
   },
-  "homepage": "https://github.com/VibeTensor/vibemcp#readme",
+  "homepage": "https://vibemcp.vibetensor.com",
   "engines": {
     "node": ">=18.0.0"
   },
