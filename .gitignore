@@ -68,4 +68,5 @@ temp/
 docs/_build/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
+docs/changelog.md
 site/

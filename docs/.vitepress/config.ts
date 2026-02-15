@@ -1,4 +1,13 @@
 import { defineConfig } from 'vitepress'
+import { copyFileSync } from 'fs'
+import { resolve } from 'path'
+
+const root = resolve(__dirname, '../../')
+
+// Sync root CHANGELOG.md into docs/ so there's only one source of truth
+try {
+  copyFileSync(resolve(root, 'CHANGELOG.md'), resolve(root, 'docs/changelog.md'))
+} catch {}
 
 export default defineConfig({
   title: 'VibeMCP',
