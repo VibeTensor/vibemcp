@@ -69,7 +69,7 @@ Authenticated service instances are cached with a 10-minute TTL. This avoids rep
 
 ## Contributing
 
-We welcome contributions! See [CONTRIBUTING.md](https://github.com/nicktensor/vibemcp/blob/main/CONTRIBUTING.md) for guidelines.
+We welcome contributions! See [CONTRIBUTING.md](https://github.com/VibeTensor/vibemcp/blob/main/CONTRIBUTING.md) for guidelines.
 
 **High-priority areas:**
 - Unit and integration tests

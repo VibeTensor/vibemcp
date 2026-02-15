@@ -14,7 +14,7 @@ hero:
       link: /guide/getting-started
     - theme: alt
       text: View on GitHub
-      link: https://github.com/nicktensor/vibemcp
+      link: https://github.com/VibeTensor/vibemcp
     - theme: alt
       text: npm
       link: https://www.npmjs.com/package/@vibetensor/vibemcp

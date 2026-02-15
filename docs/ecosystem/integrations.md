@@ -88,4 +88,4 @@ Partial flattening: `organizer.emailAddress.address` -> `organizer`, but `start`
 
 VibeMCP is a passthrough -- it fetches from APIs on demand and stores nothing. OAuth tokens are local JSON files. No telemetry, no hosted services, no data retention.
 
-See [Privacy Policy](https://github.com/nicktensor/vibemcp/blob/main/PRIVACY.md) and [Security Policy](https://github.com/nicktensor/vibemcp/blob/main/SECURITY.md).
+See [Privacy Policy](https://github.com/VibeTensor/vibemcp/blob/main/PRIVACY.md) and [Security Policy](https://github.com/VibeTensor/vibemcp/blob/main/SECURITY.md).

@@ -127,4 +127,4 @@ Based on analysis of the TOON v3.0 spec and ecosystem:
 
 - [TOON Specification v3.0](https://github.com/toon-format/spec)
 - [TOON Format Repository](https://github.com/toon-format/toon)
-- [VibeMCP Encoder Source](https://github.com/nicktensor/vibemcp/blob/main/src/toon/encoder.ts)
+- [VibeMCP Encoder Source](https://github.com/VibeTensor/vibemcp/blob/main/src/toon/encoder.ts)

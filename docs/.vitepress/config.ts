@@ -66,7 +66,7 @@ export default defineConfig({
     },
 
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/nicktensor/vibemcp' },
+      { icon: 'github', link: 'https://github.com/VibeTensor/vibemcp' },
       { icon: 'npm', link: 'https://www.npmjs.com/package/@vibetensor/vibemcp' },
     ],
 
