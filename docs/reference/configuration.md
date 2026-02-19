@@ -2,7 +2,32 @@
 
 ## Environment Variables
 
-Create a `.env` file in the project root or working directory:
+VibeMCP needs OAuth credentials to access Gmail and Microsoft APIs. There are three ways to provide them:
+
+### Option 1: MCP Client Config (Recommended)
+
+Pass credentials directly in your MCP client configuration. This is the simplest — no files to manage.
+
+```json
+{
+  "mcpServers": {
+    "vibemcp": {
+      "command": "npx",
+      "args": ["-y", "@vibetensor/vibemcp"],
+      "env": {
+        "GOOGLE_CLIENT_ID": "your-client-id.apps.googleusercontent.com",
+        "GOOGLE_CLIENT_SECRET": "your-client-secret",
+        "MICROSOFT_CLIENT_ID": "your-azure-client-id",
+        "MICROSOFT_TENANT_ID": "common"
+      }
+    }
+  }
+}
+```
+
+### Option 2: `.env` File
+
+Create a `.env` file in your working directory:
 
 ```sh
 # Google OAuth 2.0 (for Gmail + Google Calendar)
@@ -14,13 +39,38 @@ MICROSOFT_CLIENT_ID=your-application-client-id
 MICROSOFT_TENANT_ID=common
 ```
 
+### Option 3: Persistent `.env` in Config Dir
+
+Place a `.env` file at `~/.vibemcp/.env`. This is loaded automatically when no `.env` exists in the working directory.
+
+### Loading Order
+
+VibeMCP checks for `.env` in this order:
+1. **Current working directory** — `$PWD/.env`
+2. **Config directory** — `~/.vibemcp/.env`
+3. **Pre-set environment variables** — from MCP client `env` block
+
+MCP client `env` block variables are always available regardless of `.env` file loading.
+
+## All Environment Variables
+
+| Variable | Required | Default | Description |
+|:---------|:---------|:--------|:------------|
+| `GOOGLE_CLIENT_ID` | For Gmail/Calendar | — | Google OAuth 2.0 Client ID |
+| `GOOGLE_CLIENT_SECRET` | For Gmail/Calendar | — | Google OAuth 2.0 Client Secret |
+| `GOOGLE_OAUTH_PORT` | No | `4100` | Port for Google OAuth callback server |
+| `MICROSOFT_CLIENT_ID` | For Outlook/Calendar | — | Azure App Registration Client ID |
+| `MICROSOFT_TENANT_ID` | No | `common` | Azure tenant ID |
+| `VIBEMCP_OUTPUT_FORMAT` | No | `toon` | Default output format: `toon` or `json` |
+| `VIBEMCP_CONFIG_DIR` | No | `~/.vibemcp/` | Override config directory location |
+
 ## Google Cloud Setup
 
 1. Go to [Google Cloud Console > Credentials](https://console.cloud.google.com/apis/credentials)
-2. Create a new **OAuth 2.0 Client ID** (Application type: Desktop)
+2. Create a new **OAuth 2.0 Client ID** (Application type: **Desktop**)
 3. Add `http://localhost:4100/code` as an authorized redirect URI
 4. Enable the **Gmail API** and **Google Calendar API** in [API Library](https://console.cloud.google.com/apis/library)
-5. Copy the Client ID and Client Secret to your `.env`
+5. Copy the Client ID and Client Secret
 
 ### Google Scopes
 
@@ -36,16 +86,18 @@ VibeMCP requests these scopes during OAuth:
 ## Microsoft Azure Setup
 
 1. Go to [Azure Portal > App Registrations](https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade)
-2. Register a new application (any name)
+2. Register a new application
 3. Set **Supported account types** to "Personal Microsoft accounts only" or "All account types"
 4. Under **Authentication**, enable **"Allow public client flows"** (required for Device Code)
-5. Copy the Application (client) ID to your `.env`
+5. Copy the Application (client) ID
 
-::: tip
-No redirect URI is needed for Microsoft. VibeMCP uses the Device Code flow, which is ideal for CLI tools.
+::: tip No Redirect URI Needed
+VibeMCP uses the Device Code flow for Microsoft, which doesn't require a redirect URI. This makes it ideal for CLI and MCP server environments.
 :::
 
 ### Microsoft Scopes
+
+**All accounts (personal + business):**
 
 | Scope | Purpose |
 |:------|:--------|
@@ -54,9 +106,43 @@ No redirect URI is needed for Microsoft. VibeMCP uses the Device Code flow, whic
 | `Calendars.ReadWrite` | Calendar access |
 | `User.Read` | User profile |
 
-Personal accounts (hotmail/outlook/live) automatically exclude Teams and organizational scopes.
+**Business accounts only (additional):**
+
+| Scope | Purpose |
+|:------|:--------|
+| `Chat.ReadWrite` | Teams chat access |
+| `User.ReadBasic.All` | Read basic user info |
+| `ChannelMessage.Send` | Post to Teams channels |
+| `Team.ReadBasic.All` | Read team info |
+| `Channel.ReadBasic.All` | Read channel info |
+
+Personal accounts (hotmail/outlook/live) automatically use only the base scopes. Teams scopes are not supported by personal Microsoft accounts.
 
 ## MCP Client Configuration
+
+### Claude Desktop
+
+Config file location:
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **Linux**: `~/.config/Claude/claude_desktop_config.json`
+
+```json
+{
+  "mcpServers": {
+    "vibemcp": {
+      "command": "npx",
+      "args": ["-y", "@vibetensor/vibemcp"],
+      "env": {
+        "GOOGLE_CLIENT_ID": "your-client-id.apps.googleusercontent.com",
+        "GOOGLE_CLIENT_SECRET": "your-client-secret",
+        "MICROSOFT_CLIENT_ID": "your-azure-client-id",
+        "MICROSOFT_TENANT_ID": "common"
+      }
+    }
+  }
+}
+```
 
 ### Claude Code
 
@@ -68,22 +154,13 @@ Add to `~/.claude.json`:
     "vibemcp": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@vibetensor/vibemcp"]
-    }
-  }
-}
-```
-
-### Claude Desktop
-
-Add to your Claude Desktop config file:
-
-```json
-{
-  "mcpServers": {
-    "vibemcp": {
-      "command": "npx",
-      "args": ["-y", "@vibetensor/vibemcp"]
+      "args": ["-y", "@vibetensor/vibemcp"],
+      "env": {
+        "GOOGLE_CLIENT_ID": "your-client-id.apps.googleusercontent.com",
+        "GOOGLE_CLIENT_SECRET": "your-client-secret",
+        "MICROSOFT_CLIENT_ID": "your-azure-client-id",
+        "MICROSOFT_TENANT_ID": "common"
+      }
     }
   }
 }
@@ -97,7 +174,11 @@ Add to your Claude Desktop config file:
     "vibemcp": {
       "type": "stdio",
       "command": "node",
-      "args": ["/absolute/path/to/vibemcp/dist/index.js"]
+      "args": ["/absolute/path/to/vibemcp/dist/cli.js"],
+      "env": {
+        "GOOGLE_CLIENT_ID": "your-client-id.apps.googleusercontent.com",
+        "GOOGLE_CLIENT_SECRET": "your-client-secret"
+      }
     }
   }
 }
@@ -105,12 +186,17 @@ Add to your Claude Desktop config file:
 
 ## File Structure
 
-After authentication, VibeMCP creates these files:
+VibeMCP stores all persistent data in `~/.vibemcp/`:
 
 | File | Purpose |
 |:-----|:--------|
-| `.env` | API credentials (user-created) |
-| `accounts.json` | Registry of connected accounts |
-| `.oauth2.{email}.json` | OAuth tokens per account |
+| `~/.vibemcp/accounts.json` | Registry of connected accounts |
+| `~/.vibemcp/.oauth2.{email}.json` | Google OAuth tokens per account |
+| `~/.vibemcp/ms-token-cache.json` | Microsoft MSAL token cache |
+| `~/.vibemcp/.env` | (Optional) persistent environment config |
 
-All of these should be in your `.gitignore`.
+The config directory can be overridden with `VIBEMCP_CONFIG_DIR`.
+
+::: warning Security
+These files contain OAuth tokens. They should never be committed to version control. The `~/.vibemcp/` directory is in your home folder and is not part of any project.
+:::

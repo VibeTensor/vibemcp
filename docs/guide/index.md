@@ -17,7 +17,7 @@ Most email and calendar MCP servers return verbose JSON:
 
 ## The Solution
 
-VibeMCP uses [TOON (Token-Oriented Object Notation)](https://github.com/toon-format/toon) -- an open format that declares the schema once, then streams data as tab-delimited rows:
+VibeMCP uses [TOON (Token-Oriented Object Notation)](https://github.com/toon-format/toon) — an open format that declares the schema once, then streams data as tab-delimited rows:
 
 ```
 messages[2]{id,subject,from,date,snippet}
@@ -27,29 +27,58 @@ def456	Q4 Report	jane@example.com	2025-12-17	Please review the...
 
 **~38 tokens** for the same data. No repeated keys, no brackets, no quotes.
 
+## How It Fits Together
+
+```mermaid
+flowchart LR
+    subgraph Input["AI Assistant"]
+        CL["Claude / GPT / etc."]
+    end
+
+    subgraph VibeMCP["VibeMCP Server"]
+        TH["31 Tool Handlers"]
+        TE["TOON Encoder"]
+    end
+
+    subgraph Providers["APIs"]
+        Gmail["Gmail API"]
+        Graph["Microsoft Graph"]
+    end
+
+    CL -->|"MCP tool call"| TH
+    TH --> Gmail & Graph
+    Gmail & Graph -->|"JSON response"| TH
+    TH -->|"encode"| TE
+    TE -->|"TOON output\n(51% fewer tokens)"| CL
+
+    style VibeMCP fill:#f0f9ff,stroke:#0ea5e9
+    style Input fill:#faf5ff,stroke:#a855f7
+    style Providers fill:#f0fdf4,stroke:#22c55e
+```
+
 ## Key Features
 
 - **31 tools** across Gmail, Outlook, Google Calendar, and Outlook Calendar
 - **TOON output** with per-call `format` parameter (switch to JSON anytime)
-- **Multi-account** -- connect multiple Google and Microsoft accounts
+- **Multi-account** — connect multiple Google and Microsoft accounts
 - **Cross-account** search, unified inbox, and merged calendar
-- **Self-hosted** -- no telemetry, no data retention, fully local
+- **Self-hosted** — no telemetry, no data retention, fully local
 
 ## Comparison
 
 | Feature | VibeMCP | gmail-mcp | ms-365-mcp-server |
-|---------|:-------:|:---------:|:-----------------:|
-| Gmail | 8 tools | 60+ tools | - |
-| Outlook Mail | 8 tools | - | 90+ tools |
+|:--------|:-------:|:---------:|:-----------------:|
+| Gmail | 8 tools | 60+ tools | — |
+| Outlook Mail | 8 tools | — | 90+ tools |
 | **Unified (both)** | **Yes** | No | No |
 | **TOON output** | **Yes** | No | No |
 | **Multi-account** | **Native** | No | No |
 | Token savings | **51%** | None | None |
 
-Existing TOON MCP servers (like `toon-mcp`) are generic JSON-to-TOON converters. VibeMCP encodes at the **source level**, selecting optimal fields per data type.
+Existing TOON MCP servers (like `toon-mcp`) are generic JSON-to-TOON converters. VibeMCP encodes at the **source level**, selecting optimal fields per data type for maximum savings.
 
 ## Next Steps
 
-- [Getting Started](/guide/getting-started) -- install and authenticate in 5 minutes
-- [TOON Format](/guide/toon-format) -- how the token optimization works
-- [Tools Reference](/reference/tools) -- all 31 tools documented
+- [Getting Started](/guide/getting-started) — install and authenticate in under 5 minutes
+- [TOON Format](/guide/toon-format) — how the token optimization works
+- [Tools Reference](/reference/tools) — all 31 tools documented

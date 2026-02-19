@@ -1,20 +1,30 @@
 # CLI Reference
 
-VibeMCP includes a command-line interface for account management and server operations.
+VibeMCP includes a CLI for account management and server operations.
 
 ## Usage
 
 ```bash
-npx @vibetensor/vibemcp <command> [options]
-```
-
-Or if installed from source:
-
-```bash
-npx tsx src/cli.ts <command> [options]
+npx @vibetensor/vibemcp [command] [options]
 ```
 
 ## Commands
+
+### Default (No Command)
+
+Starts the MCP server on stdio transport. This is what MCP clients use:
+
+```bash
+npx @vibetensor/vibemcp
+```
+
+### `serve`
+
+Explicit alias for starting the MCP server:
+
+```bash
+npx @vibetensor/vibemcp serve
+```
 
 ### `auth`
 
@@ -30,13 +40,13 @@ npx @vibetensor/vibemcp auth microsoft your@outlook.com
 
 **Google flow:**
 1. Opens browser to Google OAuth consent screen
-2. Starts local server on `http://localhost:4100/code`
-3. After consent, captures the auth code and stores tokens
+2. Starts a local callback server on `http://localhost:4100/code`
+3. After you grant access, captures the auth code and stores tokens in `~/.vibemcp/`
 
 **Microsoft flow:**
 1. Prints a device code and URL (`microsoft.com/devicelogin`)
-2. You enter the code in your browser
-3. Polls for completion and stores tokens
+2. You enter the code in your browser and sign in
+3. Polls for completion and stores tokens in `~/.vibemcp/`
 
 ### `accounts`
 
@@ -50,19 +60,29 @@ npx @vibetensor/vibemcp accounts list
 npx @vibetensor/vibemcp accounts remove your@gmail.com
 ```
 
-### Default (no command)
+### `help`
 
-Starts the MCP server on stdio:
+Show usage information:
 
 ```bash
-npx @vibetensor/vibemcp
+npx @vibetensor/vibemcp help
 ```
 
-This is the command used by MCP clients (Claude Code, Claude Desktop).
+### `version`
+
+Show the installed version:
+
+```bash
+npx @vibetensor/vibemcp version
+```
 
 ## Environment Variables
 
-The CLI reads from `.env` in the current directory:
+The CLI loads environment variables in this order:
+
+1. **Pre-set env vars** (from shell or MCP client config)
+2. **`.env` in current working directory** (for local development)
+3. **`~/.vibemcp/.env`** (persistent config)
 
 | Variable | Required For | Description |
 |:---------|:-------------|:------------|
@@ -70,15 +90,19 @@ The CLI reads from `.env` in the current directory:
 | `GOOGLE_CLIENT_SECRET` | Google auth | OAuth 2.0 Client Secret |
 | `MICROSOFT_CLIENT_ID` | Microsoft auth | Azure App Registration Client ID |
 | `MICROSOFT_TENANT_ID` | Microsoft auth | Azure tenant (default: `common`) |
+| `VIBEMCP_CONFIG_DIR` | — | Override config directory (default: `~/.vibemcp/`) |
 
 ## Token Storage
 
-OAuth tokens are stored as JSON files in the working directory:
+All OAuth tokens and account data are stored in `~/.vibemcp/`:
 
 ```
-.oauth2.your@gmail.com.json        # Google tokens
-.oauth2.your@outlook.com.json      # Microsoft tokens
-accounts.json                       # Account registry
+~/.vibemcp/
+├── accounts.json                    # Account registry
+├── .oauth2.user@gmail.com.json      # Google OAuth tokens
+├── .oauth2.work@company.com.json    # Google OAuth tokens (second account)
+├── ms-token-cache.json              # Microsoft MSAL token cache
+└── .env                             # (Optional) persistent env config
 ```
 
-These files contain sensitive credentials and should be added to `.gitignore`.
+These files contain sensitive credentials. They are stored in your home directory and isolated from any project.

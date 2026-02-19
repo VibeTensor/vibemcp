@@ -16,9 +16,9 @@ msg003	Lunch?	bob@example.com	2025-12-16	Are you free Thursday
 ```
 
 **Header:** `typeName[count]{field1,field2,...}` declares the schema once.
-- `messages` -- type label
-- `[3]` -- row count (enables LLM to verify completeness)
-- `{id,subject,from,date,snippet}` -- column names in order
+- `messages` —type label
+- `[3]` —row count (enables LLM to verify completeness)
+- `{id,subject,from,date,snippet}` —column names in order
 
 **Rows:** Tab-delimited values. One row per object. No repeated keys, no brackets, no quotes.
 
@@ -40,18 +40,35 @@ message:
 
 ## Why TOON Beats JSON for LLMs
 
-1. **No repeated keys** -- JSON repeats field names for every item. TOON declares fields once.
-2. **No syntax noise** -- No `{`, `}`, `[`, `]`, `"`, `,` characters consuming tokens.
-3. **Self-describing schema** -- The `[count]{fields}` header tells the LLM what to expect.
-4. **JSON fallback** -- Every tool accepts `format: "json"` for debugging.
+1. **No repeated keys** —JSON repeats field names for every item. TOON declares fields once.
+2. **No syntax noise** —No `{`, `}`, `[`, `]`, `"`, `,` characters consuming tokens.
+3. **Self-describing schema** —The `[count]{fields}` header tells the LLM what to expect.
+4. **JSON fallback** —Every tool accepts `format: "json"` for debugging.
 
 ## Source-Level Encoding
 
 Unlike generic JSON-to-TOON converters, VibeMCP encodes at the **source level**:
 
-1. **Field selection** -- Each data type uses a curated set of fields, not the full API response
-2. **Flattening** -- Nested API objects are transformed to flat primitives before encoding
-3. **Type-aware** -- Calendar events, emails, and folders each get optimal field layouts
+```mermaid
+flowchart LR
+    API["API Response\n(deeply nested JSON)"]
+    FS["Field Selection\nPick relevant fields"]
+    FL["Flattening\nNested → flat values"]
+    TE["TOON Encode\nHeader + rows"]
+    OUT["TOON Output\n(51% fewer tokens)"]
+
+    API --> FS --> FL --> TE --> OUT
+
+    style API fill:#fef3c7,stroke:#f59e0b
+    style FS fill:#f0f9ff,stroke:#0ea5e9
+    style FL fill:#f0f9ff,stroke:#0ea5e9
+    style TE fill:#f0fdf4,stroke:#22c55e
+    style OUT fill:#f0fdf4,stroke:#22c55e
+```
+
+1. **Field selection** — Each data type uses a curated set of fields, not the full API response
+2. **Flattening** — Nested API objects are transformed to flat primitives before encoding
+3. **Type-aware** — Calendar events, emails, and folders each get optimal field layouts
 
 ### Field Selection Per Data Type
 
@@ -86,7 +103,7 @@ API responses from Google and Microsoft contain deeply nested structures. VibeMC
 
 ## Schema Evolution
 
-TOON headers are self-describing. Each response declares its own schema. If a new field is added, the header simply includes it. The LLM reads the header and knows what columns to expect -- no version negotiation needed.
+TOON headers are self-describing. Each response declares its own schema. If a new field is added, the header simply includes it. The LLM reads the header and knows what columns to expect —no version negotiation needed.
 
 ## TOON v3.0 Spec Compatibility
 
