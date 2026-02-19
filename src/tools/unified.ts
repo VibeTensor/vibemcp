@@ -17,7 +17,6 @@ import { formatOutput } from '../toon/encoder.js';
 import { logError, ErrorCategory } from '../utils/logger.js';
 
 export function registerUnifiedTools(server: McpServer): void {
-
   // ===================================================================
   // Unified Search — search across all email accounts
   // ===================================================================
@@ -27,7 +26,12 @@ export function registerUnifiedTools(server: McpServer): void {
     'Search across all configured email accounts (Gmail + Outlook) simultaneously. Returns combined results with TOON output.',
     {
       query: z.string().describe('Search query'),
-      maxPerAccount: z.coerce.number().min(1).max(50).default(5).describe('Max results per account'),
+      maxPerAccount: z.coerce
+        .number()
+        .min(1)
+        .max(50)
+        .default(5)
+        .describe('Max results per account'),
       format: z.enum(['toon', 'json']).default('toon'),
     },
     async ({ query, maxPerAccount, format }) => {
@@ -38,9 +42,11 @@ export function registerUnifiedTools(server: McpServer): void {
         // Search Gmail accounts
         const gmailPromises = accounts.google_accounts.map(async (acc) => {
           try {
-            const svc = await getServiceAsync(`GmailService:${acc.email}`, () => GmailService.create(acc.email));
+            const svc = await getServiceAsync(`GmailService:${acc.email}`, () =>
+              GmailService.create(acc.email),
+            );
             const emails = await svc.searchEmails(query, maxPerAccount);
-            return emails.map(e => ({ ...e, _account: acc.email, _provider: 'gmail' }));
+            return emails.map((e) => ({ ...e, _account: acc.email, _provider: 'gmail' }));
           } catch {
             return [{ _account: acc.email, _provider: 'gmail', error: 'Failed to search' }];
           }
@@ -49,9 +55,11 @@ export function registerUnifiedTools(server: McpServer): void {
         // Search Outlook accounts
         const outlookPromises = accounts.microsoft_accounts.map(async (acc) => {
           try {
-            const svc = await getServiceAsync(`MicrosoftMailService:${acc.email}`, () => MicrosoftMailService.create(acc.email));
+            const svc = await getServiceAsync(`MicrosoftMailService:${acc.email}`, () =>
+              MicrosoftMailService.create(acc.email),
+            );
             const messages = await svc.searchMessages(query, maxPerAccount);
-            return messages.map(m => ({ ...m, _account: acc.email, _provider: 'outlook' }));
+            return messages.map((m) => ({ ...m, _account: acc.email, _provider: 'outlook' }));
           } catch {
             return [{ _account: acc.email, _provider: 'outlook', error: 'Failed to search' }];
           }
@@ -63,17 +71,35 @@ export function registerUnifiedTools(server: McpServer): void {
         }
 
         if (allResults.length === 0) {
-          return { content: [{ type: 'text' as const, text: 'No results found across any account.' }] };
+          return {
+            content: [{ type: 'text' as const, text: 'No results found across any account.' }],
+          };
         }
 
         return {
-          content: [{
-            type: 'text' as const,
-            text: formatOutput(allResults, format, 'unified_results', ['_account', '_provider', 'subject', 'from', 'date']),
-          }],
+          content: [
+            {
+              type: 'text' as const,
+              text: formatOutput(allResults, format, 'unified_results', [
+                '_account',
+                '_provider',
+                'subject',
+                'from',
+                'date',
+              ]),
+            },
+          ],
         };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('unified_search', e as Error, ErrorCategory.UNIFIED) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('unified_search', e as Error, ErrorCategory.UNIFIED),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );
@@ -97,9 +123,11 @@ export function registerUnifiedTools(server: McpServer): void {
         // Gmail unread
         const gmailPromises = accounts.google_accounts.map(async (acc) => {
           try {
-            const svc = await getServiceAsync(`GmailService:${acc.email}`, () => GmailService.create(acc.email));
+            const svc = await getServiceAsync(`GmailService:${acc.email}`, () =>
+              GmailService.create(acc.email),
+            );
             const emails = await svc.searchEmails('is:unread', maxPerAccount);
-            return emails.map(e => ({ ...e, _account: acc.email, _provider: 'gmail' }));
+            return emails.map((e) => ({ ...e, _account: acc.email, _provider: 'gmail' }));
           } catch {
             return [];
           }
@@ -108,9 +136,11 @@ export function registerUnifiedTools(server: McpServer): void {
         // Outlook unread
         const outlookPromises = accounts.microsoft_accounts.map(async (acc) => {
           try {
-            const svc = await getServiceAsync(`MicrosoftMailService:${acc.email}`, () => MicrosoftMailService.create(acc.email));
+            const svc = await getServiceAsync(`MicrosoftMailService:${acc.email}`, () =>
+              MicrosoftMailService.create(acc.email),
+            );
             const messages = await svc.listMessages('inbox', maxPerAccount, 'isRead eq false');
-            return messages.map(m => ({ ...m, _account: acc.email, _provider: 'outlook' }));
+            return messages.map((m) => ({ ...m, _account: acc.email, _provider: 'outlook' }));
           } catch {
             return [];
           }
@@ -122,17 +152,34 @@ export function registerUnifiedTools(server: McpServer): void {
         }
 
         if (allResults.length === 0) {
-          return { content: [{ type: 'text' as const, text: 'No unread messages across any account.' }] };
+          return {
+            content: [{ type: 'text' as const, text: 'No unread messages across any account.' }],
+          };
         }
 
         return {
-          content: [{
-            type: 'text' as const,
-            text: formatOutput(allResults, format, 'unread_messages', ['_account', '_provider', 'subject', 'from']),
-          }],
+          content: [
+            {
+              type: 'text' as const,
+              text: formatOutput(allResults, format, 'unread_messages', [
+                '_account',
+                '_provider',
+                'subject',
+                'from',
+              ]),
+            },
+          ],
         };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('unified_inbox', e as Error, ErrorCategory.UNIFIED) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('unified_inbox', e as Error, ErrorCategory.UNIFIED),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );
@@ -158,9 +205,11 @@ export function registerUnifiedTools(server: McpServer): void {
         // Google Calendar
         const gcalPromises = accounts.google_accounts.map(async (acc) => {
           try {
-            const svc = await getServiceAsync(`GoogleCalendarService:${acc.email}`, () => GoogleCalendarService.create(acc.email));
+            const svc = await getServiceAsync(`GoogleCalendarService:${acc.email}`, () =>
+              GoogleCalendarService.create(acc.email),
+            );
             const events = await svc.getEvents(timeMin, timeMax, 'primary', maxPerAccount);
-            return events.map(e => ({ ...e, _account: acc.email, _provider: 'google' }));
+            return events.map((e) => ({ ...e, _account: acc.email, _provider: 'google' }));
           } catch {
             return [];
           }
@@ -169,9 +218,11 @@ export function registerUnifiedTools(server: McpServer): void {
         // Outlook Calendar
         const msCalPromises = accounts.microsoft_accounts.map(async (acc) => {
           try {
-            const svc = await getServiceAsync(`MicrosoftCalendarService:${acc.email}`, () => MicrosoftCalendarService.create(acc.email));
+            const svc = await getServiceAsync(`MicrosoftCalendarService:${acc.email}`, () =>
+              MicrosoftCalendarService.create(acc.email),
+            );
             const events = await svc.getEvents(timeMin, timeMax, undefined, maxPerAccount);
-            return events.map(e => ({ ...e, _account: acc.email, _provider: 'microsoft' }));
+            return events.map((e) => ({ ...e, _account: acc.email, _provider: 'microsoft' }));
           } catch {
             return [];
           }
@@ -183,17 +234,41 @@ export function registerUnifiedTools(server: McpServer): void {
         }
 
         if (allEvents.length === 0) {
-          return { content: [{ type: 'text' as const, text: 'No events found across any account in the given time range.' }] };
+          return {
+            content: [
+              {
+                type: 'text' as const,
+                text: 'No events found across any account in the given time range.',
+              },
+            ],
+          };
         }
 
         return {
-          content: [{
-            type: 'text' as const,
-            text: formatOutput(allEvents, format, 'events', ['_account', '_provider', 'summary', 'subject', 'start', 'end']),
-          }],
+          content: [
+            {
+              type: 'text' as const,
+              text: formatOutput(allEvents, format, 'events', [
+                '_account',
+                '_provider',
+                'summary',
+                'subject',
+                'start',
+                'end',
+              ]),
+            },
+          ],
         };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('unified_calendar', e as Error, ErrorCategory.UNIFIED) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('unified_calendar', e as Error, ErrorCategory.UNIFIED),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );

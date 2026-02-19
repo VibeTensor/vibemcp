@@ -17,7 +17,6 @@ async function getGmail(account: string): Promise<GmailService> {
 }
 
 export function registerGmailTools(server: McpServer): void {
-
   // ===================================================================
   // List Messages
   // ===================================================================
@@ -29,7 +28,10 @@ export function registerGmailTools(server: McpServer): void {
       account: z.string().email().describe('Google account email'),
       query: z.string().optional().describe('Gmail search query'),
       maxResults: z.coerce.number().min(1).max(500).default(10).describe('Max messages to return'),
-      format: z.enum(['toon', 'json']).default('toon').describe('Output format (toon saves 50% tokens)'),
+      format: z
+        .enum(['toon', 'json'])
+        .default('toon')
+        .describe('Output format (toon saves 50% tokens)'),
     },
     async ({ account, query, maxResults, format }) => {
       try {
@@ -41,13 +43,29 @@ export function registerGmailTools(server: McpServer): void {
         }
 
         return {
-          content: [{
-            type: 'text' as const,
-            text: formatOutput(emails, format, 'messages', ['id', 'subject', 'from', 'date', 'snippet']),
-          }],
+          content: [
+            {
+              type: 'text' as const,
+              text: formatOutput(emails, format, 'messages', [
+                'id',
+                'subject',
+                'from',
+                'date',
+                'snippet',
+              ]),
+            },
+          ],
         };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('gmail_list_messages', e as Error, ErrorCategory.GMAIL) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('gmail_list_messages', e as Error, ErrorCategory.GMAIL),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );
@@ -70,15 +88,26 @@ export function registerGmailTools(server: McpServer): void {
         const email = await svc.getEmail(messageId);
 
         return {
-          content: [{
-            type: 'text' as const,
-            text: format === 'json'
-              ? JSON.stringify(email, null, 2)
-              : formatOutput(email, 'toon', 'message'),
-          }],
+          content: [
+            {
+              type: 'text' as const,
+              text:
+                format === 'json'
+                  ? JSON.stringify(email, null, 2)
+                  : formatOutput(email, 'toon', 'message'),
+            },
+          ],
         };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('gmail_get_message', e as Error, ErrorCategory.GMAIL) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('gmail_get_message', e as Error, ErrorCategory.GMAIL),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );
@@ -103,7 +132,15 @@ export function registerGmailTools(server: McpServer): void {
         const result = await svc.sendEmail(to, subject, body, cc);
         return { content: [{ type: 'text' as const, text: JSON.stringify(result) }] };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('gmail_send_message', e as Error, ErrorCategory.GMAIL) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('gmail_send_message', e as Error, ErrorCategory.GMAIL),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );
@@ -128,7 +165,15 @@ export function registerGmailTools(server: McpServer): void {
         const result = await svc.reply(messageId, body, send, cc);
         return { content: [{ type: 'text' as const, text: JSON.stringify(result) }] };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('gmail_reply_to_message', e as Error, ErrorCategory.GMAIL) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('gmail_reply_to_message', e as Error, ErrorCategory.GMAIL),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );
@@ -153,7 +198,15 @@ export function registerGmailTools(server: McpServer): void {
         const result = await svc.createDraft(to, subject, body, cc);
         return { content: [{ type: 'text' as const, text: JSON.stringify(result) }] };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('gmail_create_draft', e as Error, ErrorCategory.GMAIL) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('gmail_create_draft', e as Error, ErrorCategory.GMAIL),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );
@@ -174,13 +227,23 @@ export function registerGmailTools(server: McpServer): void {
         const svc = await getGmail(account);
         const labels = await svc.listLabels();
         return {
-          content: [{
-            type: 'text' as const,
-            text: formatOutput(labels, format, 'labels', ['id', 'name', 'type']),
-          }],
+          content: [
+            {
+              type: 'text' as const,
+              text: formatOutput(labels, format, 'labels', ['id', 'name', 'type']),
+            },
+          ],
         };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('gmail_list_labels', e as Error, ErrorCategory.GMAIL) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('gmail_list_labels', e as Error, ErrorCategory.GMAIL),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );
@@ -203,13 +266,23 @@ export function registerGmailTools(server: McpServer): void {
         const svc = await getGmail(account);
         const threads = await svc.listThreads(query ?? '', maxResults);
         return {
-          content: [{
-            type: 'text' as const,
-            text: formatOutput(threads, format, 'threads', ['id', 'snippet']),
-          }],
+          content: [
+            {
+              type: 'text' as const,
+              text: formatOutput(threads, format, 'threads', ['id', 'snippet']),
+            },
+          ],
         };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('gmail_list_threads', e as Error, ErrorCategory.GMAIL) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('gmail_list_threads', e as Error, ErrorCategory.GMAIL),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );
@@ -237,13 +310,29 @@ export function registerGmailTools(server: McpServer): void {
 
         // TOON: show thread messages as array
         return {
-          content: [{
-            type: 'text' as const,
-            text: formatOutput(thread.messages, 'toon', 'thread_messages', ['id', 'from', 'subject', 'date', 'snippet']),
-          }],
+          content: [
+            {
+              type: 'text' as const,
+              text: formatOutput(thread.messages, 'toon', 'thread_messages', [
+                'id',
+                'from',
+                'subject',
+                'date',
+                'snippet',
+              ]),
+            },
+          ],
         };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('gmail_get_thread', e as Error, ErrorCategory.GMAIL) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('gmail_get_thread', e as Error, ErrorCategory.GMAIL),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );

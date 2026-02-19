@@ -56,7 +56,10 @@ export class MicrosoftCalendarService {
   // HTTP helpers
   // =================================================================
 
-  private async get(endpoint: string, params?: Record<string, string>): Promise<Record<string, unknown>> {
+  private async get(
+    endpoint: string,
+    params?: Record<string, string>,
+  ): Promise<Record<string, unknown>> {
     const url = new URL(`${GRAPH_BASE}${endpoint}`);
     if (params) {
       for (const [k, v] of Object.entries(params)) {
@@ -68,7 +71,7 @@ export class MicrosoftCalendarService {
       headers: { Authorization: `Bearer ${this.token}`, 'Content-Type': 'application/json' },
     });
     if (!res.ok) throw new Error(`Graph API ${res.status}: ${await res.text()}`);
-    return await res.json() as Record<string, unknown>;
+    return (await res.json()) as Record<string, unknown>;
   }
 
   private async post(endpoint: string, body: unknown): Promise<Record<string, unknown>> {
@@ -79,7 +82,7 @@ export class MicrosoftCalendarService {
     });
     if (!res.ok) throw new Error(`Graph API ${res.status}: ${await res.text()}`);
     const text = await res.text();
-    return text ? JSON.parse(text) as Record<string, unknown> : {};
+    return text ? (JSON.parse(text) as Record<string, unknown>) : {};
   }
 
   private async patch(endpoint: string, body: unknown): Promise<Record<string, unknown>> {
@@ -89,7 +92,7 @@ export class MicrosoftCalendarService {
       body: JSON.stringify(body),
     });
     if (!res.ok) throw new Error(`Graph API ${res.status}: ${await res.text()}`);
-    return await res.json() as Record<string, unknown>;
+    return (await res.json()) as Record<string, unknown>;
   }
 
   private async del(endpoint: string): Promise<void> {
@@ -110,12 +113,12 @@ export class MicrosoftCalendarService {
     const location = event['location'] as Record<string, unknown> | undefined;
     const organizer = event['organizer'] as Record<string, unknown> | undefined;
     const orgEmail = organizer?.['emailAddress'] as Record<string, unknown> | undefined;
-    const attendees = event['attendees'] as Array<Record<string, unknown>> ?? [];
+    const attendees = (event['attendees'] as Array<Record<string, unknown>>) ?? [];
     const body = event['body'] as Record<string, unknown> | undefined;
 
     return {
-      id: event['id'] as string ?? '',
-      subject: event['subject'] as string ?? '(no title)',
+      id: (event['id'] as string) ?? '',
+      subject: (event['subject'] as string) ?? '(no title)',
       body: (body?.['content'] as string) ?? '',
       start: {
         dateTime: (start?.['dateTime'] as string) ?? '',
@@ -127,7 +130,7 @@ export class MicrosoftCalendarService {
       },
       location: (location?.['displayName'] as string) ?? '',
       organizer: (orgEmail?.['address'] as string) ?? '',
-      attendees: attendees.map(a => {
+      attendees: attendees.map((a) => {
         const ea = a['emailAddress'] as Record<string, unknown> | undefined;
         const st = a['status'] as Record<string, unknown> | undefined;
         return {
@@ -135,9 +138,9 @@ export class MicrosoftCalendarService {
           status: (st?.['response'] as string) ?? '',
         };
       }),
-      isOnlineMeeting: event['isOnlineMeeting'] as boolean ?? false,
-      onlineMeetingUrl: event['onlineMeetingUrl'] as string ?? '',
-      importance: event['importance'] as string ?? 'normal',
+      isOnlineMeeting: (event['isOnlineMeeting'] as boolean) ?? false,
+      onlineMeetingUrl: (event['onlineMeetingUrl'] as string) ?? '',
+      importance: (event['importance'] as string) ?? 'normal',
     };
   }
 
@@ -147,30 +150,34 @@ export class MicrosoftCalendarService {
 
   async listCalendars(): Promise<MSCalendarInfo[]> {
     const data = await this.get('/me/calendars');
-    const value = data['value'] as Array<Record<string, unknown>> ?? [];
-    return value.map(c => ({
-      id: c['id'] as string ?? '',
-      name: c['name'] as string ?? '',
-      color: c['color'] as string ?? '',
-      isDefaultCalendar: c['isDefaultCalendar'] as boolean ?? false,
-      canEdit: c['canEdit'] as boolean ?? false,
+    const value = (data['value'] as Array<Record<string, unknown>>) ?? [];
+    return value.map((c) => ({
+      id: (c['id'] as string) ?? '',
+      name: (c['name'] as string) ?? '',
+      color: (c['color'] as string) ?? '',
+      isDefaultCalendar: (c['isDefaultCalendar'] as boolean) ?? false,
+      canEdit: (c['canEdit'] as boolean) ?? false,
     }));
   }
 
-  async getEvents(startDateTime: string, endDateTime: string, calendarId?: string, top = 50): Promise<MSCalendarEvent[]> {
-    const endpoint = calendarId
-      ? `/me/calendars/${calendarId}/calendarView`
-      : '/me/calendarView';
+  async getEvents(
+    startDateTime: string,
+    endDateTime: string,
+    calendarId?: string,
+    top = 50,
+  ): Promise<MSCalendarEvent[]> {
+    const endpoint = calendarId ? `/me/calendars/${calendarId}/calendarView` : '/me/calendarView';
     const params: Record<string, string> = {
       startDateTime,
       endDateTime,
-      '$top': String(top),
-      '$orderby': 'start/dateTime',
-      '$select': 'id,subject,body,start,end,location,organizer,attendees,isOnlineMeeting,onlineMeetingUrl,importance',
+      $top: String(top),
+      $orderby: 'start/dateTime',
+      $select:
+        'id,subject,body,start,end,location,organizer,attendees,isOnlineMeeting,onlineMeetingUrl,importance',
     };
     const data = await this.get(endpoint, params);
-    const value = data['value'] as Array<Record<string, unknown>> ?? [];
-    return value.map(e => this.formatEvent(e));
+    const value = (data['value'] as Array<Record<string, unknown>>) ?? [];
+    return value.map((e) => this.formatEvent(e));
   }
 
   async createEvent(params: {
@@ -197,7 +204,7 @@ export class MicrosoftCalendarService {
       eventBody['location'] = { displayName: params.location };
     }
     if (params.attendees?.length) {
-      eventBody['attendees'] = params.attendees.map(a => ({
+      eventBody['attendees'] = params.attendees.map((a) => ({
         emailAddress: { address: a },
         type: 'required',
       }));
@@ -207,21 +214,22 @@ export class MicrosoftCalendarService {
       eventBody['onlineMeetingProvider'] = 'teamsForBusiness';
     }
 
-    const endpoint = params.calendarId
-      ? `/me/calendars/${params.calendarId}/events`
-      : '/me/events';
+    const endpoint = params.calendarId ? `/me/calendars/${params.calendarId}/events` : '/me/events';
     const data = await this.post(endpoint, eventBody);
     return this.formatEvent(data);
   }
 
-  async updateEvent(eventId: string, updates: {
-    subject?: string;
-    start?: string;
-    end?: string;
-    timezone?: string;
-    body?: string;
-    location?: string;
-  }): Promise<MSCalendarEvent> {
+  async updateEvent(
+    eventId: string,
+    updates: {
+      subject?: string;
+      start?: string;
+      end?: string;
+      timezone?: string;
+      body?: string;
+      location?: string;
+    },
+  ): Promise<MSCalendarEvent> {
     const patch: Record<string, unknown> = {};
     if (updates.subject !== undefined) patch['subject'] = updates.subject;
     if (updates.body !== undefined) patch['body'] = { contentType: 'Text', content: updates.body };
@@ -239,7 +247,11 @@ export class MicrosoftCalendarService {
     return true;
   }
 
-  async getAvailability(startDateTime: string, endDateTime: string, schedules?: string[]): Promise<Record<string, unknown>> {
+  async getAvailability(
+    startDateTime: string,
+    endDateTime: string,
+    schedules?: string[],
+  ): Promise<Record<string, unknown>> {
     const body = {
       schedules: schedules ?? [],
       startTime: { dateTime: startDateTime, timeZone: 'UTC' },

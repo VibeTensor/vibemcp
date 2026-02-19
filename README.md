@@ -337,7 +337,17 @@ npm install          # Install dependencies
 npx tsc --noEmit     # Type check
 npm run build        # Build
 npm run dev          # Dev mode (auto-reload)
+npm test             # Run tests (46 tests)
+npm run lint         # ESLint check
+npm run format       # Prettier format
 node dist/index.js   # Run directly
+```
+
+### Docker
+
+```bash
+docker build -t vibemcp .
+docker run --env-file .env vibemcp
 ```
 
 ---
@@ -360,7 +370,9 @@ node dist/index.js   # Run directly
 - [ ] Attachment handling (upload / download)
 - [ ] Google Calendar event update
 - [ ] Gmail label management
-- [ ] Comprehensive test suite
+- [x] Test suite (TOON encoder, logger, token store, service cache)
+- [x] ESLint + Prettier configuration
+- [x] Docker support
 
 ### v0.3 — Expand
 

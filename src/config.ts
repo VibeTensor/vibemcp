@@ -48,12 +48,7 @@ export const MS_TOKEN_CACHE_PATH = path.join(
 );
 
 // Base scopes — work for ALL Microsoft accounts (personal + business)
-export const MS_SCOPES_BASE = [
-  'Mail.ReadWrite',
-  'Mail.Send',
-  'Calendars.ReadWrite',
-  'User.Read',
-];
+export const MS_SCOPES_BASE = ['Mail.ReadWrite', 'Mail.Send', 'Calendars.ReadWrite', 'User.Read'];
 
 // Teams scopes — only work for business/organizational accounts
 export const MS_SCOPES_TEAMS = [
@@ -71,7 +66,7 @@ export const MS_SCOPES_PERSONAL = MS_SCOPES_BASE;
 export const MS_SCOPES = [...MS_SCOPES_BASE, ...MS_SCOPES_TEAMS];
 
 // VibeMCP settings
-export const DEFAULT_OUTPUT_FORMAT = (getEnv('VIBEMCP_OUTPUT_FORMAT', 'toon') as 'toon' | 'json');
+export const DEFAULT_OUTPUT_FORMAT = getEnv('VIBEMCP_OUTPUT_FORMAT', 'toon') as 'toon' | 'json';
 
 // =====================================================================
 // Account Registry
@@ -102,7 +97,7 @@ export function saveAccounts(data: AccountsData): void {
 
 export function addGoogleAccount(email: string, accountType = 'personal', extraInfo = ''): boolean {
   const data = loadAccounts();
-  if (data.google_accounts.some(a => a.email === email)) return false;
+  if (data.google_accounts.some((a) => a.email === email)) return false;
   data.google_accounts.push({ email, accountType, extraInfo });
   saveAccounts(data);
   return true;
@@ -111,7 +106,7 @@ export function addGoogleAccount(email: string, accountType = 'personal', extraI
 export function removeGoogleAccount(email: string): boolean {
   const data = loadAccounts();
   const before = data.google_accounts.length;
-  data.google_accounts = data.google_accounts.filter(a => a.email !== email);
+  data.google_accounts = data.google_accounts.filter((a) => a.email !== email);
   if (data.google_accounts.length < before) {
     saveAccounts(data);
     const tokenFile = path.join(PROJECT_DIR, `.oauth2.${email}.json`);
@@ -121,9 +116,13 @@ export function removeGoogleAccount(email: string): boolean {
   return false;
 }
 
-export function addMicrosoftAccount(email: string, accountType = 'business', extraInfo = ''): boolean {
+export function addMicrosoftAccount(
+  email: string,
+  accountType = 'business',
+  extraInfo = '',
+): boolean {
   const data = loadAccounts();
-  if (data.microsoft_accounts.some(a => a.email === email)) return false;
+  if (data.microsoft_accounts.some((a) => a.email === email)) return false;
   data.microsoft_accounts.push({ email, accountType, extraInfo });
   saveAccounts(data);
   return true;
@@ -132,7 +131,7 @@ export function addMicrosoftAccount(email: string, accountType = 'business', ext
 export function removeMicrosoftAccount(email: string): boolean {
   const data = loadAccounts();
   const before = data.microsoft_accounts.length;
-  data.microsoft_accounts = data.microsoft_accounts.filter(a => a.email !== email);
+  data.microsoft_accounts = data.microsoft_accounts.filter((a) => a.email !== email);
   if (data.microsoft_accounts.length < before) {
     saveAccounts(data);
     return true;

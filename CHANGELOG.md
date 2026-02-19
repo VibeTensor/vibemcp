@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.3] - 2026-02-19
+
+### Added
+- **Test suite**: 46 tests across 4 test suites (TOON encoder, logger, token store, service cache)
+- **ESLint configuration**: Flat config (v9+) with TypeScript support and strict rules
+- **Prettier configuration**: Consistent code formatting (single quotes, trailing commas, 100 char width)
+- **Jest configuration**: ts-jest with ESM support for modern TypeScript testing
+- **Dockerfile**: Multi-stage production build (node:20-alpine)
+- **Docker ignore**: Proper .dockerignore for clean builds
+- **Examples**: Claude Desktop integration configuration (`examples/claude-desktop-config.json`)
+
+### Fixed
+- Removed unused imports in `auth/google.ts` (`URLSearchParams`, `loadAccounts`)
+- Removed unused variable in `auth/microsoft.ts` (`tokenCache`)
+- Applied Prettier formatting to all source files
+
 ## [0.1.2] - 2026-02-16
 
 ### Changed
@@ -57,6 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 | Version | Date | Description |
 |---------|------|-------------|
+| 0.1.3 | 2026-02-19 | Test suite, ESLint, Prettier, Docker support |
 | 0.1.2 | 2026-02-16 | Homepage update, npm README refresh |
 | 0.1.1 | 2026-02-16 | Logo, documentation site, README improvements |
 | 0.1.0 | 2026-02-14 | Initial release: Gmail + Outlook + Calendar + TOON |
@@ -64,6 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 | 0.3.0 | TBD | Slack, Todoist, semantic caching |
 | 1.0.0 | TBD | Hosted OAuth, npm package, enterprise features |
 
+[0.1.3]: https://github.com/VibeTensor/vibemcp/releases/tag/v0.1.3
 [0.1.2]: https://github.com/VibeTensor/vibemcp/releases/tag/v0.1.2
 [0.1.1]: https://github.com/VibeTensor/vibemcp/releases/tag/v0.1.1
 [0.1.0]: https://github.com/VibeTensor/vibemcp/releases/tag/v0.1.0

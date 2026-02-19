@@ -77,9 +77,7 @@ export function encodeToon<T extends Record<string, unknown>>(
   const header = `${typeName}${countPart}{${fieldList.join(',')}}`;
 
   // Data rows: delimiter-separated values
-  const rows = items.map(item =>
-    fieldList.map(f => escapeValue(item[f], delim)).join(delim),
-  );
+  const rows = items.map((item) => fieldList.map((f) => escapeValue(item[f], delim)).join(delim));
 
   return `${header}\n${rows.join('\n')}`;
 }
@@ -91,9 +89,10 @@ export function encodeToonSingle(typeName: string, obj: Record<string, unknown>)
   const lines: string[] = [`${typeName}:`];
   for (const [key, value] of Object.entries(obj)) {
     if (value === undefined) continue;
-    const val = typeof value === 'object' && value !== null
-      ? JSON.stringify(value)
-      : escapeValue(value, '\t');
+    const val =
+      typeof value === 'object' && value !== null
+        ? JSON.stringify(value)
+        : escapeValue(value, '\t');
     lines.push(`  ${key}: ${val}`);
   }
   return lines.join('\n');

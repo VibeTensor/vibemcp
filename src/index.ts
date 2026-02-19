@@ -39,11 +39,11 @@ const server = new McpServer({
 // Register All Tools
 // =============================================================================
 
-registerAdminTools(server);       // list_accounts, add_google_account, etc.
-registerGmailTools(server);       // gmail_list_messages, gmail_send_message, etc.
-registerOutlookTools(server);     // outlook_list_messages, outlook_send_message, etc.
-registerCalendarTools(server);    // calendar_list_events, calendar_create_event, etc.
-registerUnifiedTools(server);     // unified_search, unified_inbox, unified_calendar
+registerAdminTools(server); // list_accounts, add_google_account, etc.
+registerGmailTools(server); // gmail_list_messages, gmail_send_message, etc.
+registerOutlookTools(server); // outlook_list_messages, outlook_send_message, etc.
+registerCalendarTools(server); // calendar_list_events, calendar_create_event, etc.
+registerUnifiedTools(server); // unified_search, unified_inbox, unified_calendar
 
 // =============================================================================
 // Start Server

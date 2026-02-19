@@ -19,9 +19,15 @@ import { log } from '../utils/logger.js';
 
 // Personal account domains — Graph Teams/Chat scopes not supported for MSA
 const PERSONAL_DOMAINS = new Set([
-  'hotmail.com', 'outlook.com', 'live.com', 'msn.com',
-  'hotmail.co.uk', 'hotmail.fr', 'hotmail.de',
-  'outlook.co.uk', 'live.co.uk',
+  'hotmail.com',
+  'outlook.com',
+  'live.com',
+  'msn.com',
+  'hotmail.co.uk',
+  'hotmail.fr',
+  'hotmail.de',
+  'outlook.co.uk',
+  'live.co.uk',
 ]);
 
 // =====================================================================
@@ -29,7 +35,7 @@ const PERSONAL_DOMAINS = new Set([
 // =====================================================================
 
 let msalApp: msal.PublicClientApplication | null = null;
-let tokenCache: msal.TokenCache | null = null;
+// tokenCache reference kept for future use in cache persistence improvements
 
 function saveCacheIfChanged(): void {
   if (!msalApp) return;
@@ -37,7 +43,9 @@ function saveCacheIfChanged(): void {
     const cache = msalApp.getTokenCache();
     const serialized = cache.serialize();
     fs.writeFileSync(MS_TOKEN_CACHE_PATH, serialized);
-  } catch { /* ignore */ }
+  } catch {
+    /* ignore */
+  }
 }
 
 async function getMsalApp(): Promise<msal.PublicClientApplication | null> {
@@ -75,7 +83,10 @@ async function getMsalApp(): Promise<msal.PublicClientApplication | null> {
 
   // Save cache on process exit
   process.on('exit', saveCacheIfChanged);
-  process.on('SIGINT', () => { saveCacheIfChanged(); process.exit(0); });
+  process.on('SIGINT', () => {
+    saveCacheIfChanged();
+    process.exit(0);
+  });
 
   return msalApp;
 }
@@ -91,7 +102,7 @@ function isPersonalAccount(email: string): boolean {
 
 function scopesForAccount(email: string): string[] {
   const scopes = isPersonalAccount(email) ? MS_SCOPES_PERSONAL : MS_SCOPES;
-  return scopes.map(s => `https://graph.microsoft.com/${s}`);
+  return scopes.map((s) => `https://graph.microsoft.com/${s}`);
 }
 
 // =====================================================================
@@ -109,9 +120,7 @@ export async function getTokenForAccount(accountId: string): Promise<string | nu
   const scopes = scopesForAccount(accountId);
 
   const accounts = await app.getTokenCache().getAllAccounts();
-  const target = accounts.find(
-    acc => acc.username?.toLowerCase() === accountId.toLowerCase(),
-  );
+  const target = accounts.find((acc) => acc.username?.toLowerCase() === accountId.toLowerCase());
 
   if (target) {
     try {
@@ -147,11 +156,15 @@ export async function initiateDeviceFlow(email: string): Promise<{
   const scopes = scopesForAccount(email);
   const personal = isPersonalAccount(email);
 
-  log('info', `Starting device flow for ${email} (${personal ? 'personal' : 'business'}) with ${scopes.length} scopes`);
+  log(
+    'info',
+    `Starting device flow for ${email} (${personal ? 'personal' : 'business'}) with ${scopes.length} scopes`,
+  );
 
   try {
     // We need to use a callback-based approach for device code
-    let deviceCodeInfo: { userCode: string; verificationUri: string; message: string } | null = null;
+    let deviceCodeInfo: { userCode: string; verificationUri: string; message: string } | null =
+      null;
 
     const request: msal.DeviceCodeRequest = {
       scopes,
@@ -174,7 +187,7 @@ export async function initiateDeviceFlow(email: string): Promise<{
     (globalThis as Record<string, unknown>)[`_ms_flow_${email}`] = tokenPromise;
 
     // Wait briefly for the device code callback to fire
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     if (!deviceCodeInfo) {
       log('error', 'Device code callback did not fire');
@@ -194,7 +207,9 @@ export async function initiateDeviceFlow(email: string): Promise<{
  */
 export async function completeDeviceFlow(email: string): Promise<string | null> {
   const key = `_ms_flow_${email}`;
-  const tokenPromise = (globalThis as Record<string, unknown>)[key] as Promise<msal.AuthenticationResult | null> | undefined;
+  const tokenPromise = (globalThis as Record<string, unknown>)[key] as
+    | Promise<msal.AuthenticationResult | null>
+    | undefined;
 
   if (!tokenPromise) {
     log('error', `No pending device flow for ${email}`);
@@ -232,12 +247,14 @@ export async function validateMicrosoftAccount(accountId: string): Promise<boole
 /**
  * List all Microsoft accounts in the MSAL cache.
  */
-export async function listCachedAccounts(): Promise<Array<{ username: string; homeAccountId: string }>> {
+export async function listCachedAccounts(): Promise<
+  Array<{ username: string; homeAccountId: string }>
+> {
   const app = await getMsalApp();
   if (!app) return [];
 
   const accounts = await app.getTokenCache().getAllAccounts();
-  return accounts.map(acc => ({
+  return accounts.map((acc) => ({
     username: acc.username ?? '',
     homeAccountId: acc.homeAccountId ?? '',
   }));

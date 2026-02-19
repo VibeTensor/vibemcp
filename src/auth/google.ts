@@ -6,7 +6,7 @@
  */
 
 import http from 'node:http';
-import { URL, URLSearchParams } from 'node:url';
+import { URL } from 'node:url';
 import path from 'node:path';
 import { google } from 'googleapis';
 import { OAuth2Client } from 'google-auth-library';
@@ -18,7 +18,6 @@ import {
   GOOGLE_SCOPES,
   GOOGLE_OAUTH_PORT,
   PROJECT_DIR,
-  loadAccounts,
 } from '../config.js';
 import { readTokenFile, writeTokenFile } from './store.js';
 import { log } from '../utils/logger.js';
@@ -27,7 +26,10 @@ import { log } from '../utils/logger.js';
 // Pending auth state (module-scoped, replaces Python's builtins hack)
 // =====================================================================
 
-const pendingFlows = new Map<string, { client: OAuth2Client; server: http.Server; code: string | null }>();
+const pendingFlows = new Map<
+  string,
+  { client: OAuth2Client; server: http.Server; code: string | null }
+>();
 
 // =====================================================================
 // Token file management
@@ -62,12 +64,14 @@ export async function getCredentials(email: string): Promise<OAuth2Client | null
   if (!tokenData) return null;
 
   const client = createOAuth2Client();
-  client.setCredentials(tokenData as {
-    access_token?: string;
-    refresh_token?: string;
-    expiry_date?: number;
-    token_type?: string;
-  });
+  client.setCredentials(
+    tokenData as {
+      access_token?: string;
+      refresh_token?: string;
+      expiry_date?: number;
+      token_type?: string;
+    },
+  );
 
   // Check if token is expired and refresh
   const expiryDate = tokenData['expiry_date'] as number | undefined;
@@ -118,12 +122,18 @@ export async function initiateGoogleAuth(email: string): Promise<{ authUrl: stri
   // Close any existing pending flow for this email
   const existing = pendingFlows.get(email);
   if (existing?.server) {
-    try { existing.server.close(); } catch { /* ignore */ }
+    try {
+      existing.server.close();
+    } catch {
+      /* ignore */
+    }
   }
 
   // Start callback server
   let resolveCode: ((code: string) => void) | null = null;
-  const codePromise = new Promise<string>((resolve) => { resolveCode = resolve; });
+  const codePromise = new Promise<string>((resolve) => {
+    resolveCode = resolve;
+  });
 
   const state: { code: string | null; server: http.Server | null } = { code: null, server: null };
 
@@ -184,7 +194,7 @@ export async function completeGoogleAuth(email: string): Promise<boolean> {
 
   // Wait a moment for the code to arrive if not yet received
   if (!flow.code) {
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 
   if (!flow.code) {
@@ -199,13 +209,21 @@ export async function completeGoogleAuth(email: string): Promise<boolean> {
     log('info', `Google account ${email} authenticated successfully`);
 
     // Cleanup
-    try { flow.server.close(); } catch { /* ignore */ }
+    try {
+      flow.server.close();
+    } catch {
+      /* ignore */
+    }
     pendingFlows.delete(email);
 
     return true;
   } catch (e) {
     log('error', `Failed to exchange code for ${email}: ${e}`);
-    try { flow.server.close(); } catch { /* ignore */ }
+    try {
+      flow.server.close();
+    } catch {
+      /* ignore */
+    }
     pendingFlows.delete(email);
     return false;
   }

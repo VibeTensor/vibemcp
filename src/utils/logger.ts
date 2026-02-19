@@ -21,7 +21,11 @@ export enum ErrorCategory {
   UNIFIED = 'UNIFIED',
 }
 
-export function log(level: 'debug' | 'info' | 'warn' | 'error', message: string, context?: Record<string, unknown>): void {
+export function log(
+  level: 'debug' | 'info' | 'warn' | 'error',
+  message: string,
+  context?: Record<string, unknown>,
+): void {
   const timestamp = new Date().toISOString();
   const prefix = `[${timestamp}] [${level.toUpperCase()}]`;
   if (context) {

@@ -59,7 +59,7 @@ export class GoogleCalendarService {
       end: event.end?.dateTime ?? event.end?.date ?? '',
       status: event.status ?? '',
       organizer: event.organizer?.email ?? '',
-      attendees: (event.attendees ?? []).map(a => a.email ?? ''),
+      attendees: (event.attendees ?? []).map((a) => a.email ?? ''),
       htmlLink: event.htmlLink ?? '',
       hangoutLink: event.hangoutLink ?? '',
     };
@@ -67,7 +67,7 @@ export class GoogleCalendarService {
 
   async listCalendars(): Promise<CalendarInfo[]> {
     const result = await this.calendar.calendarList.list();
-    return (result.data.items ?? []).map(c => ({
+    return (result.data.items ?? []).map((c) => ({
       id: c.id ?? '',
       summary: c.summary ?? '',
       primary: c.primary ?? false,
@@ -75,7 +75,12 @@ export class GoogleCalendarService {
     }));
   }
 
-  async getEvents(timeMin: string, timeMax: string, calendarId = 'primary', maxResults = 50): Promise<CalendarEvent[]> {
+  async getEvents(
+    timeMin: string,
+    timeMax: string,
+    calendarId = 'primary',
+    maxResults = 50,
+  ): Promise<CalendarEvent[]> {
     const result = await this.calendar.events.list({
       calendarId,
       timeMin,
@@ -84,7 +89,7 @@ export class GoogleCalendarService {
       singleEvents: true,
       orderBy: 'startTime',
     });
-    return (result.data.items ?? []).map(e => this.formatEvent(e));
+    return (result.data.items ?? []).map((e) => this.formatEvent(e));
   }
 
   async createEvent(params: {
@@ -102,7 +107,7 @@ export class GoogleCalendarService {
       end: { dateTime: params.end },
       description: params.description,
       location: params.location,
-      attendees: params.attendees?.map(email => ({ email })),
+      attendees: params.attendees?.map((email) => ({ email })),
     };
 
     const result = await this.calendar.events.insert({

@@ -31,8 +31,10 @@ By participating in this project, you agree to our [Code of Conduct](CODE_OF_CON
 2. Create a feature branch: `git checkout -b feature/your-feature`
 3. Make your changes
 4. Run type checking: `npx tsc --noEmit`
-5. Commit with clear messages
-6. Push and create a Pull Request
+5. Run tests: `npm test`
+6. Run linting: `npm run lint`
+7. Commit with clear messages
+8. Push and create a Pull Request
 
 ## Development Setup
 
@@ -59,6 +61,15 @@ npm run dev
 
 # Type check
 npx tsc --noEmit
+
+# Run tests
+npm test
+
+# Lint
+npm run lint
+
+# Format
+npm run format
 ```
 
 ### Authentication Setup
@@ -99,6 +110,24 @@ src/
     └── errors.ts         # Error categories and formatting
 ```
 
+## Testing
+
+Tests are in the `tests/` directory and use Jest with ts-jest for ESM support.
+
+```bash
+npm test                          # Run all tests
+npm run test:coverage             # Run with coverage report
+npx jest tests/toon-encoder.test.ts  # Run a specific test file
+```
+
+**Test files:**
+- `toon-encoder.test.ts` — TOON encoder (encodeToon, encodeToonSingle, formatOutput)
+- `logger.test.ts` — Logger utility and error categories
+- `token-store.test.ts` — Token file read/write/delete
+- `cache.test.ts` — Service instance cache
+
+When adding new features, include corresponding tests.
+
 ## Coding Standards
 
 ### TypeScript
@@ -137,7 +166,8 @@ refactor: simplify multi-account handling
 
 ### High Priority
 
-- [ ] Unit and integration tests
+- [x] Unit tests for TOON encoder, logger, token store, service cache
+- [ ] Integration tests for tool handlers
 - [ ] Attachment handling (upload/download)
 - [ ] Google Calendar event update support
 - [ ] Gmail label management (create/delete/apply)

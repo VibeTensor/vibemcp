@@ -71,7 +71,10 @@ export class GmailService {
   // Message parsing helpers
   // =================================================================
 
-  private parseMessage(msg: gmail_v1.Schema$Message, includeBody = false): ParsedEmail | ParsedEmailFull {
+  private parseMessage(
+    msg: gmail_v1.Schema$Message,
+    includeBody = false,
+  ): ParsedEmail | ParsedEmailFull {
     const headers: Record<string, string> = {};
     for (const h of msg.payload?.headers ?? []) {
       if (h.name && h.value) headers[h.name.toLowerCase()] = h.value;
@@ -173,7 +176,12 @@ export class GmailService {
     return this.parseMessage(msg.data, true) as ParsedEmailFull;
   }
 
-  async sendEmail(to: string, subject: string, body: string, cc?: string): Promise<{ id: string; status: string }> {
+  async sendEmail(
+    to: string,
+    subject: string,
+    body: string,
+    cc?: string,
+  ): Promise<{ id: string; status: string }> {
     const raw = buildRawEmail(to, subject, body, cc);
     const sent = await this.gmail.users.messages.send({
       userId: 'me',
@@ -182,7 +190,12 @@ export class GmailService {
     return { id: sent.data.id ?? '', status: 'sent' };
   }
 
-  async reply(messageId: string, replyBody: string, send = false, cc?: string): Promise<{ id: string; status: string }> {
+  async reply(
+    messageId: string,
+    replyBody: string,
+    send = false,
+    cc?: string,
+  ): Promise<{ id: string; status: string }> {
     const original = await this.gmail.users.messages.get({
       userId: 'me',
       id: messageId,
@@ -222,7 +235,12 @@ export class GmailService {
     }
   }
 
-  async createDraft(to: string, subject: string, body: string, cc?: string): Promise<{ id: string; messageId: string }> {
+  async createDraft(
+    to: string,
+    subject: string,
+    body: string,
+    cc?: string,
+  ): Promise<{ id: string; messageId: string }> {
     const raw = buildRawEmail(to, subject, body, cc);
     const draft = await this.gmail.users.drafts.create({
       userId: 'me',
@@ -241,7 +259,7 @@ export class GmailService {
 
   async listLabels(): Promise<Label[]> {
     const result = await this.gmail.users.labels.list({ userId: 'me' });
-    return (result.data.labels ?? []).map(l => ({
+    return (result.data.labels ?? []).map((l) => ({
       id: l.id ?? '',
       name: l.name ?? '',
       type: l.type ?? '',
@@ -255,7 +273,7 @@ export class GmailService {
       maxResults: Math.min(maxResults, 500),
     });
 
-    return (result.data.threads ?? []).map(t => ({
+    return (result.data.threads ?? []).map((t) => ({
       id: t.id ?? '',
       snippet: t.snippet ?? '',
       historyId: t.historyId ?? '',
@@ -272,11 +290,16 @@ export class GmailService {
 
     return {
       id: result.data.id ?? '',
-      messages: (result.data.messages ?? []).map(m => this.parseMessage(m, true) as ParsedEmailFull),
+      messages: (result.data.messages ?? []).map(
+        (m) => this.parseMessage(m, true) as ParsedEmailFull,
+      ),
     };
   }
 
-  async getAttachment(messageId: string, attachmentId: string): Promise<{ data: string; size: number }> {
+  async getAttachment(
+    messageId: string,
+    attachmentId: string,
+  ): Promise<{ data: string; size: number }> {
     const att = await this.gmail.users.messages.attachments.get({
       userId: 'me',
       messageId,

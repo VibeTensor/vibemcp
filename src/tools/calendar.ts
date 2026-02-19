@@ -17,23 +17,26 @@ import { logError, ErrorCategory } from '../utils/logger.js';
 // Detect if account is Google or Microsoft
 function detectProvider(account: string): 'google' | 'microsoft' {
   const data = loadAccounts();
-  if (data.google_accounts.some(a => a.email === account)) return 'google';
-  if (data.microsoft_accounts.some(a => a.email === account)) return 'microsoft';
+  if (data.google_accounts.some((a) => a.email === account)) return 'google';
+  if (data.microsoft_accounts.some((a) => a.email === account)) return 'microsoft';
   // Fallback: guess from domain
   if (account.endsWith('@gmail.com') || account.endsWith('@googlemail.com')) return 'google';
   return 'microsoft';
 }
 
 async function getGoogleCalendar(account: string): Promise<GoogleCalendarService> {
-  return getServiceAsync(`GoogleCalendarService:${account}`, () => GoogleCalendarService.create(account));
+  return getServiceAsync(`GoogleCalendarService:${account}`, () =>
+    GoogleCalendarService.create(account),
+  );
 }
 
 async function getMSCalendar(account: string): Promise<MicrosoftCalendarService> {
-  return getServiceAsync(`MicrosoftCalendarService:${account}`, () => MicrosoftCalendarService.create(account));
+  return getServiceAsync(`MicrosoftCalendarService:${account}`, () =>
+    MicrosoftCalendarService.create(account),
+  );
 }
 
 export function registerCalendarTools(server: McpServer): void {
-
   // ===================================================================
   // List Calendars
   // ===================================================================
@@ -53,23 +56,45 @@ export function registerCalendarTools(server: McpServer): void {
           const svc = await getGoogleCalendar(account);
           const calendars = await svc.listCalendars();
           return {
-            content: [{
-              type: 'text' as const,
-              text: formatOutput(calendars, format, 'calendars', ['id', 'summary', 'primary', 'timeZone']),
-            }],
+            content: [
+              {
+                type: 'text' as const,
+                text: formatOutput(calendars, format, 'calendars', [
+                  'id',
+                  'summary',
+                  'primary',
+                  'timeZone',
+                ]),
+              },
+            ],
           };
         } else {
           const svc = await getMSCalendar(account);
           const calendars = await svc.listCalendars();
           return {
-            content: [{
-              type: 'text' as const,
-              text: formatOutput(calendars, format, 'calendars', ['id', 'name', 'isDefaultCalendar', 'canEdit']),
-            }],
+            content: [
+              {
+                type: 'text' as const,
+                text: formatOutput(calendars, format, 'calendars', [
+                  'id',
+                  'name',
+                  'isDefaultCalendar',
+                  'canEdit',
+                ]),
+              },
+            ],
           };
         }
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('calendar_list_calendars', e as Error, ErrorCategory.GCAL) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('calendar_list_calendars', e as Error, ErrorCategory.GCAL),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );
@@ -98,32 +123,66 @@ export function registerCalendarTools(server: McpServer): void {
           const events = await svc.getEvents(timeMin, timeMax, calendarId ?? 'primary', maxResults);
 
           if (events.length === 0) {
-            return { content: [{ type: 'text' as const, text: 'No events found in the given time range.' }] };
+            return {
+              content: [
+                { type: 'text' as const, text: 'No events found in the given time range.' },
+              ],
+            };
           }
 
           return {
-            content: [{
-              type: 'text' as const,
-              text: formatOutput(events, format, 'events', ['id', 'summary', 'start', 'end', 'location', 'organizer']),
-            }],
+            content: [
+              {
+                type: 'text' as const,
+                text: formatOutput(events, format, 'events', [
+                  'id',
+                  'summary',
+                  'start',
+                  'end',
+                  'location',
+                  'organizer',
+                ]),
+              },
+            ],
           };
         } else {
           const svc = await getMSCalendar(account);
           const events = await svc.getEvents(timeMin, timeMax, calendarId, maxResults);
 
           if (events.length === 0) {
-            return { content: [{ type: 'text' as const, text: 'No events found in the given time range.' }] };
+            return {
+              content: [
+                { type: 'text' as const, text: 'No events found in the given time range.' },
+              ],
+            };
           }
 
           return {
-            content: [{
-              type: 'text' as const,
-              text: formatOutput(events, format, 'events', ['id', 'subject', 'start', 'end', 'location', 'organizer']),
-            }],
+            content: [
+              {
+                type: 'text' as const,
+                text: formatOutput(events, format, 'events', [
+                  'id',
+                  'subject',
+                  'start',
+                  'end',
+                  'location',
+                  'organizer',
+                ]),
+              },
+            ],
           };
         }
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('calendar_list_events', e as Error, ErrorCategory.GCAL) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('calendar_list_events', e as Error, ErrorCategory.GCAL),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );
@@ -147,7 +206,18 @@ export function registerCalendarTools(server: McpServer): void {
       timezone: z.string().default('UTC'),
       createOnlineMeeting: z.boolean().default(false).describe('Create Teams/Meet link'),
     },
-    async ({ account, summary, start, end, description, location, attendees, calendarId, timezone, createOnlineMeeting }) => {
+    async ({
+      account,
+      summary,
+      start,
+      end,
+      description,
+      location,
+      attendees,
+      calendarId,
+      timezone,
+      createOnlineMeeting,
+    }) => {
       try {
         const provider = detectProvider(account);
 
@@ -163,10 +233,12 @@ export function registerCalendarTools(server: McpServer): void {
             calendarId,
           });
           return {
-            content: [{
-              type: 'text' as const,
-              text: JSON.stringify(event, null, 2),
-            }],
+            content: [
+              {
+                type: 'text' as const,
+                text: JSON.stringify(event, null, 2),
+              },
+            ],
           };
         } else {
           const svc = await getMSCalendar(account);
@@ -182,14 +254,24 @@ export function registerCalendarTools(server: McpServer): void {
             calendarId,
           });
           return {
-            content: [{
-              type: 'text' as const,
-              text: JSON.stringify(event, null, 2),
-            }],
+            content: [
+              {
+                type: 'text' as const,
+                text: JSON.stringify(event, null, 2),
+              },
+            ],
           };
         }
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('calendar_create_event', e as Error, ErrorCategory.GCAL) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('calendar_create_event', e as Error, ErrorCategory.GCAL),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );
@@ -218,9 +300,21 @@ export function registerCalendarTools(server: McpServer): void {
           await svc.deleteEvent(eventId);
         }
 
-        return { content: [{ type: 'text' as const, text: JSON.stringify({ status: 'deleted', eventId }) }] };
+        return {
+          content: [
+            { type: 'text' as const, text: JSON.stringify({ status: 'deleted', eventId }) },
+          ],
+        };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('calendar_delete_event', e as Error, ErrorCategory.GCAL) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('calendar_delete_event', e as Error, ErrorCategory.GCAL),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );
@@ -245,10 +339,25 @@ export function registerCalendarTools(server: McpServer): void {
     async ({ account, eventId, subject, start, end, timezone, description, location }) => {
       try {
         const svc = await getMSCalendar(account);
-        const event = await svc.updateEvent(eventId, { subject, start, end, timezone, body: description, location });
+        const event = await svc.updateEvent(eventId, {
+          subject,
+          start,
+          end,
+          timezone,
+          body: description,
+          location,
+        });
         return { content: [{ type: 'text' as const, text: JSON.stringify(event, null, 2) }] };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('calendar_update_event', e as Error, ErrorCategory.MS_CAL) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('calendar_update_event', e as Error, ErrorCategory.MS_CAL),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );

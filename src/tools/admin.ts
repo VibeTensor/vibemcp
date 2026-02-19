@@ -18,12 +18,16 @@ import {
   DEFAULT_OUTPUT_FORMAT,
 } from '../config.js';
 import { initiateGoogleAuth, completeGoogleAuth, validateGoogleAccount } from '../auth/google.js';
-import { initiateDeviceFlow, completeDeviceFlow, validateMicrosoftAccount, listCachedAccounts } from '../auth/microsoft.js';
+import {
+  initiateDeviceFlow,
+  completeDeviceFlow,
+  validateMicrosoftAccount,
+  listCachedAccounts,
+} from '../auth/microsoft.js';
 import { logError, ErrorCategory } from '../utils/logger.js';
 import { formatOutput } from '../toon/encoder.js';
 
 export function registerAdminTools(server: McpServer): void {
-
   // ===================================================================
   // List Accounts
   // ===================================================================
@@ -60,15 +64,31 @@ export function registerAdminTools(server: McpServer): void {
         }
 
         return {
-          content: [{
-            type: 'text' as const,
-            text: result.length > 0
-              ? formatOutput(result, format, 'accounts', ['provider', 'email', 'type', 'authenticated'])
-              : 'No accounts configured. Use add_google_account or add_microsoft_account to get started.',
-          }],
+          content: [
+            {
+              type: 'text' as const,
+              text:
+                result.length > 0
+                  ? formatOutput(result, format, 'accounts', [
+                      'provider',
+                      'email',
+                      'type',
+                      'authenticated',
+                    ])
+                  : 'No accounts configured. Use add_google_account or add_microsoft_account to get started.',
+            },
+          ],
         };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('list_accounts', e as Error, ErrorCategory.ACCOUNT) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('list_accounts', e as Error, ErrorCategory.ACCOUNT),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );
@@ -92,25 +112,44 @@ export function registerAdminTools(server: McpServer): void {
         const result = await initiateGoogleAuth(email);
         if (!result) {
           return {
-            content: [{ type: 'text' as const, text: 'Failed: Could not start Google OAuth. Check GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env' }],
+            content: [
+              {
+                type: 'text' as const,
+                text: 'Failed: Could not start Google OAuth. Check GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env',
+              },
+            ],
             isError: true,
           };
         }
 
         return {
-          content: [{
-            type: 'text' as const,
-            text: JSON.stringify({
-              status: 'pending_auth',
-              email,
-              instruction: 'A browser window should have opened. Sign in and grant access.',
-              auth_url: result.authUrl,
-              next_step: `After signing in, call complete_google_auth with email='${email}'`,
-            }, null, 2),
-          }],
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify(
+                {
+                  status: 'pending_auth',
+                  email,
+                  instruction: 'A browser window should have opened. Sign in and grant access.',
+                  auth_url: result.authUrl,
+                  next_step: `After signing in, call complete_google_auth with email='${email}'`,
+                },
+                null,
+                2,
+              ),
+            },
+          ],
         };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('add_google_account', e as Error, ErrorCategory.ACCOUNT) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('add_google_account', e as Error, ErrorCategory.ACCOUNT),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );
@@ -132,11 +171,24 @@ export function registerAdminTools(server: McpServer): void {
           return { content: [{ type: 'text' as const, text: `authenticated:${email}` }] };
         }
         return {
-          content: [{ type: 'text' as const, text: `failed:Authentication not complete for ${email}. Make sure you signed in and granted access in the browser, then try again.` }],
+          content: [
+            {
+              type: 'text' as const,
+              text: `failed:Authentication not complete for ${email}. Make sure you signed in and granted access in the browser, then try again.`,
+            },
+          ],
           isError: true,
         };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('complete_google_auth', e as Error, ErrorCategory.ACCOUNT) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('complete_google_auth', e as Error, ErrorCategory.ACCOUNT),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );
@@ -160,26 +212,45 @@ export function registerAdminTools(server: McpServer): void {
         const result = await initiateDeviceFlow(email);
         if (!result) {
           return {
-            content: [{ type: 'text' as const, text: 'Failed: Could not start device flow. Check MICROSOFT_CLIENT_ID in .env' }],
+            content: [
+              {
+                type: 'text' as const,
+                text: 'Failed: Could not start device flow. Check MICROSOFT_CLIENT_ID in .env',
+              },
+            ],
             isError: true,
           };
         }
 
         return {
-          content: [{
-            type: 'text' as const,
-            text: JSON.stringify({
-              status: 'pending_auth',
-              email,
-              instruction: `Go to ${result.verificationUri} and enter the code below:`,
-              user_code: result.userCode,
-              verification_uri: result.verificationUri,
-              next_step: `After entering the code, call complete_microsoft_auth with email='${email}'`,
-            }, null, 2),
-          }],
+          content: [
+            {
+              type: 'text' as const,
+              text: JSON.stringify(
+                {
+                  status: 'pending_auth',
+                  email,
+                  instruction: `Go to ${result.verificationUri} and enter the code below:`,
+                  user_code: result.userCode,
+                  verification_uri: result.verificationUri,
+                  next_step: `After entering the code, call complete_microsoft_auth with email='${email}'`,
+                },
+                null,
+                2,
+              ),
+            },
+          ],
         };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('add_microsoft_account', e as Error, ErrorCategory.ACCOUNT) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('add_microsoft_account', e as Error, ErrorCategory.ACCOUNT),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );
@@ -201,11 +272,24 @@ export function registerAdminTools(server: McpServer): void {
           return { content: [{ type: 'text' as const, text: `authenticated:${email}` }] };
         }
         return {
-          content: [{ type: 'text' as const, text: `failed:Authentication failed for ${email}. The code may have expired - try add_microsoft_account again.` }],
+          content: [
+            {
+              type: 'text' as const,
+              text: `failed:Authentication failed for ${email}. The code may have expired - try add_microsoft_account again.`,
+            },
+          ],
           isError: true,
         };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('complete_microsoft_auth', e as Error, ErrorCategory.ACCOUNT) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('complete_microsoft_auth', e as Error, ErrorCategory.ACCOUNT),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );
@@ -219,7 +303,10 @@ export function registerAdminTools(server: McpServer): void {
     'Remove a connected account.',
     {
       email: z.string().email().describe('Account email to remove'),
-      provider: z.enum(['google', 'microsoft', 'auto']).default('auto').describe('Provider, or auto to detect'),
+      provider: z
+        .enum(['google', 'microsoft', 'auto'])
+        .default('auto')
+        .describe('Provider, or auto to detect'),
     },
     async ({ email, provider }) => {
       try {
@@ -234,9 +321,21 @@ export function registerAdminTools(server: McpServer): void {
         if (removed) {
           return { content: [{ type: 'text' as const, text: `removed:${email}` }] };
         }
-        return { content: [{ type: 'text' as const, text: `not_found:${email} not found in any provider` }] };
+        return {
+          content: [
+            { type: 'text' as const, text: `not_found:${email} not found in any provider` },
+          ],
+        };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('remove_account', e as Error, ErrorCategory.ACCOUNT) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('remove_account', e as Error, ErrorCategory.ACCOUNT),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );
@@ -261,14 +360,14 @@ export function registerAdminTools(server: McpServer): void {
             default_format: DEFAULT_OUTPUT_FORMAT,
           },
           google_accounts: await Promise.all(
-            data.google_accounts.map(async acc => ({
+            data.google_accounts.map(async (acc) => ({
               email: acc.email,
               type: acc.accountType,
               valid: await validateGoogleAccount(acc.email),
             })),
           ),
           microsoft_accounts: await Promise.all(
-            data.microsoft_accounts.map(async acc => ({
+            data.microsoft_accounts.map(async (acc) => ({
               email: acc.email,
               type: acc.accountType,
               valid: await validateMicrosoftAccount(acc.email),
@@ -279,7 +378,15 @@ export function registerAdminTools(server: McpServer): void {
 
         return { content: [{ type: 'text' as const, text: JSON.stringify(status, null, 2) }] };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('accounts_status', e as Error, ErrorCategory.ACCOUNT) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('accounts_status', e as Error, ErrorCategory.ACCOUNT),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );

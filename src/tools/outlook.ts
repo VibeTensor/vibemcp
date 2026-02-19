@@ -11,11 +11,12 @@ import { formatOutput } from '../toon/encoder.js';
 import { logError, ErrorCategory } from '../utils/logger.js';
 
 async function getOutlook(account: string): Promise<MicrosoftMailService> {
-  return getServiceAsync(`MicrosoftMailService:${account}`, () => MicrosoftMailService.create(account));
+  return getServiceAsync(`MicrosoftMailService:${account}`, () =>
+    MicrosoftMailService.create(account),
+  );
 }
 
 export function registerOutlookTools(server: McpServer): void {
-
   // ===================================================================
   // List Messages
   // ===================================================================
@@ -25,7 +26,10 @@ export function registerOutlookTools(server: McpServer): void {
     'List Outlook messages with TOON-optimized output. Supports folder filtering.',
     {
       account: z.string().email().describe('Microsoft account email'),
-      folderId: z.string().default('inbox').describe('Folder ID or well-known name (inbox, sentitems, drafts, etc.)'),
+      folderId: z
+        .string()
+        .default('inbox')
+        .describe('Folder ID or well-known name (inbox, sentitems, drafts, etc.)'),
       top: z.coerce.number().min(1).max(1000).default(10).describe('Max messages'),
       filter: z.string().optional().describe('OData $filter query'),
       format: z.enum(['toon', 'json']).default('toon'),
@@ -40,13 +44,30 @@ export function registerOutlookTools(server: McpServer): void {
         }
 
         return {
-          content: [{
-            type: 'text' as const,
-            text: formatOutput(messages, format, 'messages', ['id', 'subject', 'from', 'receivedDateTime', 'isRead', 'preview']),
-          }],
+          content: [
+            {
+              type: 'text' as const,
+              text: formatOutput(messages, format, 'messages', [
+                'id',
+                'subject',
+                'from',
+                'receivedDateTime',
+                'isRead',
+                'preview',
+              ]),
+            },
+          ],
         };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('outlook_list_messages', e as Error, ErrorCategory.MS_MAIL) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('outlook_list_messages', e as Error, ErrorCategory.MS_MAIL),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );
@@ -68,13 +89,26 @@ export function registerOutlookTools(server: McpServer): void {
         const svc = await getOutlook(account);
         const msg = await svc.getMessage(messageId);
         return {
-          content: [{
-            type: 'text' as const,
-            text: format === 'json' ? JSON.stringify(msg, null, 2) : formatOutput(msg, 'toon', 'message'),
-          }],
+          content: [
+            {
+              type: 'text' as const,
+              text:
+                format === 'json'
+                  ? JSON.stringify(msg, null, 2)
+                  : formatOutput(msg, 'toon', 'message'),
+            },
+          ],
         };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('outlook_get_message', e as Error, ErrorCategory.MS_MAIL) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('outlook_get_message', e as Error, ErrorCategory.MS_MAIL),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );
@@ -99,7 +133,15 @@ export function registerOutlookTools(server: McpServer): void {
         const result = await svc.sendMessage(to, subject, body, cc);
         return { content: [{ type: 'text' as const, text: JSON.stringify(result) }] };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('outlook_send_message', e as Error, ErrorCategory.MS_MAIL) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('outlook_send_message', e as Error, ErrorCategory.MS_MAIL),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );
@@ -122,7 +164,15 @@ export function registerOutlookTools(server: McpServer): void {
         const result = await svc.replyMessage(messageId, comment);
         return { content: [{ type: 'text' as const, text: JSON.stringify(result) }] };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('outlook_reply_to_message', e as Error, ErrorCategory.MS_MAIL) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('outlook_reply_to_message', e as Error, ErrorCategory.MS_MAIL),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );
@@ -146,7 +196,15 @@ export function registerOutlookTools(server: McpServer): void {
         const result = await svc.forwardMessage(messageId, to, comment);
         return { content: [{ type: 'text' as const, text: JSON.stringify(result) }] };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('outlook_forward_message', e as Error, ErrorCategory.MS_MAIL) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('outlook_forward_message', e as Error, ErrorCategory.MS_MAIL),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );
@@ -167,13 +225,28 @@ export function registerOutlookTools(server: McpServer): void {
         const svc = await getOutlook(account);
         const folders = await svc.listFolders();
         return {
-          content: [{
-            type: 'text' as const,
-            text: formatOutput(folders, format, 'folders', ['id', 'displayName', 'totalItemCount', 'unreadItemCount']),
-          }],
+          content: [
+            {
+              type: 'text' as const,
+              text: formatOutput(folders, format, 'folders', [
+                'id',
+                'displayName',
+                'totalItemCount',
+                'unreadItemCount',
+              ]),
+            },
+          ],
         };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('outlook_list_folders', e as Error, ErrorCategory.MS_MAIL) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('outlook_list_folders', e as Error, ErrorCategory.MS_MAIL),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );
@@ -196,7 +269,15 @@ export function registerOutlookTools(server: McpServer): void {
         const result = await svc.moveMessage(messageId, destinationFolderId);
         return { content: [{ type: 'text' as const, text: JSON.stringify(result) }] };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('outlook_move_message', e as Error, ErrorCategory.MS_MAIL) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('outlook_move_message', e as Error, ErrorCategory.MS_MAIL),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );
@@ -219,13 +300,29 @@ export function registerOutlookTools(server: McpServer): void {
         const svc = await getOutlook(account);
         const messages = await svc.searchMessages(query, top);
         return {
-          content: [{
-            type: 'text' as const,
-            text: formatOutput(messages, format, 'messages', ['id', 'subject', 'from', 'receivedDateTime', 'preview']),
-          }],
+          content: [
+            {
+              type: 'text' as const,
+              text: formatOutput(messages, format, 'messages', [
+                'id',
+                'subject',
+                'from',
+                'receivedDateTime',
+                'preview',
+              ]),
+            },
+          ],
         };
       } catch (e) {
-        return { content: [{ type: 'text' as const, text: logError('outlook_search', e as Error, ErrorCategory.MS_MAIL) }], isError: true };
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('outlook_search', e as Error, ErrorCategory.MS_MAIL),
+            },
+          ],
+          isError: true,
+        };
       }
     },
   );

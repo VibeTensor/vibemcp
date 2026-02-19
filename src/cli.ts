@@ -12,7 +12,13 @@
 
 import './utils/logger.js';
 
-import { loadAccounts, addGoogleAccount, addMicrosoftAccount, removeGoogleAccount, removeMicrosoftAccount } from './config.js';
+import {
+  loadAccounts,
+  addGoogleAccount,
+  addMicrosoftAccount,
+  removeGoogleAccount,
+  removeMicrosoftAccount,
+} from './config.js';
 import { initiateGoogleAuth, completeGoogleAuth } from './auth/google.js';
 import { initiateDeviceFlow, completeDeviceFlow } from './auth/microsoft.js';
 

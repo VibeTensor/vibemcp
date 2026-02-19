@@ -25,10 +25,7 @@ const cache = new Map<string, CacheEntry>();
  *
  * For async creation, use getServiceAsync instead.
  */
-export function getService<T>(
-  ServiceClass: new (accountId: string) => T,
-  accountId: string,
-): T {
+export function getService<T>(ServiceClass: new (accountId: string) => T, accountId: string): T {
   const key = `${ServiceClass.name}:${accountId}`;
   const now = performance.now();
 
@@ -46,10 +43,7 @@ export function getService<T>(
  * Get a cached service instance using an async factory.
  * Used for services with async initialization (e.g., Microsoft auth).
  */
-export async function getServiceAsync<T>(
-  key: string,
-  factory: () => Promise<T>,
-): Promise<T> {
+export async function getServiceAsync<T>(key: string, factory: () => Promise<T>): Promise<T> {
   const now = performance.now();
   const cached = cache.get(key);
   if (cached && now - cached.createdAt < CACHE_TTL) {
