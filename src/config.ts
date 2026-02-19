@@ -2,30 +2,69 @@
  * VibeMCP Configuration
  *
  * Manages environment variables, account registry, and paths.
- * Port of productivity-mcp/config.py
+ *
+ * Config directory resolution (in order):
+ *   1. VIBEMCP_CONFIG_DIR env var (explicit override)
+ *   2. ~/.vibemcp/ (standard user config location)
+ *
+ * The .env file is loaded from:
+ *   1. Current working directory (for local development)
+ *   2. Config directory (for production installs)
  */
 
 import dotenv from 'dotenv';
 import path from 'node:path';
 import fs from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import os from 'node:os';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// =====================================================================
+// Config Directory — persistent storage for tokens and accounts
+// =====================================================================
 
-export const PROJECT_DIR = path.resolve(__dirname, '..');
-const ENV_FILE = path.join(PROJECT_DIR, '.env');
-export const ACCOUNTS_FILE = path.join(PROJECT_DIR, 'accounts.json');
-
-// Load .env
-dotenv.config({ path: ENV_FILE });
-
-function getEnv(key: string, defaultValue?: string): string {
-  const val = process.env[key] ?? defaultValue ?? '';
-  if (!val) {
-    console.error(`[CONFIG] Missing env var: ${key}`);
+function resolveConfigDir(): string {
+  // Explicit override via env var
+  if (process.env.VIBEMCP_CONFIG_DIR) {
+    return process.env.VIBEMCP_CONFIG_DIR;
   }
-  return val;
+  // Default: ~/.vibemcp/
+  return path.join(os.homedir(), '.vibemcp');
+}
+
+export const CONFIG_DIR = resolveConfigDir();
+
+// Ensure config directory exists
+if (!fs.existsSync(CONFIG_DIR)) {
+  fs.mkdirSync(CONFIG_DIR, { recursive: true });
+}
+
+export const ACCOUNTS_FILE = path.join(CONFIG_DIR, 'accounts.json');
+
+// =====================================================================
+// .env Loading — try cwd first (dev), then config dir (production)
+// =====================================================================
+
+const cwdEnv = path.join(process.cwd(), '.env');
+const configDirEnv = path.join(CONFIG_DIR, '.env');
+
+if (fs.existsSync(cwdEnv)) {
+  dotenv.config({ path: cwdEnv });
+} else if (fs.existsSync(configDirEnv)) {
+  dotenv.config({ path: configDirEnv });
+} else {
+  // Still call dotenv to respect any pre-set env vars (from MCP client config)
+  dotenv.config();
+}
+
+// =====================================================================
+// Environment Variables
+// =====================================================================
+
+/**
+ * Get an environment variable. Only warns for truly required vars
+ * when no default is provided.
+ */
+function getEnv(key: string, defaultValue?: string): string {
+  return process.env[key] ?? defaultValue ?? '';
 }
 
 // Google OAuth
@@ -42,10 +81,7 @@ export const GOOGLE_SCOPES = [
 // Microsoft MSAL
 export const AZURE_CLIENT_ID = getEnv('MICROSOFT_CLIENT_ID');
 export const AZURE_TENANT_ID = getEnv('MICROSOFT_TENANT_ID', 'common');
-export const MS_TOKEN_CACHE_PATH = path.join(
-  process.env.HOME ?? process.env.USERPROFILE ?? PROJECT_DIR,
-  '.vibemcp-ms-cache.json',
-);
+export const MS_TOKEN_CACHE_PATH = path.join(CONFIG_DIR, 'ms-token-cache.json');
 
 // Base scopes — work for ALL Microsoft accounts (personal + business)
 export const MS_SCOPES_BASE = ['Mail.ReadWrite', 'Mail.Send', 'Calendars.ReadWrite', 'User.Read'];
@@ -67,6 +103,9 @@ export const MS_SCOPES = [...MS_SCOPES_BASE, ...MS_SCOPES_TEAMS];
 
 // VibeMCP settings
 export const DEFAULT_OUTPUT_FORMAT = getEnv('VIBEMCP_OUTPUT_FORMAT', 'toon') as 'toon' | 'json';
+
+// Legacy: keep PROJECT_DIR for backward compat but point to config dir
+export const PROJECT_DIR = CONFIG_DIR;
 
 // =====================================================================
 // Account Registry
@@ -109,7 +148,7 @@ export function removeGoogleAccount(email: string): boolean {
   data.google_accounts = data.google_accounts.filter((a) => a.email !== email);
   if (data.google_accounts.length < before) {
     saveAccounts(data);
-    const tokenFile = path.join(PROJECT_DIR, `.oauth2.${email}.json`);
+    const tokenFile = path.join(CONFIG_DIR, `.oauth2.${email}.json`);
     if (fs.existsSync(tokenFile)) fs.unlinkSync(tokenFile);
     return true;
   }

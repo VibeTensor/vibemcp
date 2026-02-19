@@ -7,13 +7,14 @@
  * services with TOON-based token optimization (40-60% fewer tokens).
  *
  * @author VibeTensor Private Limited
- * @license MIT
+ * @license PolyForm-Noncommercial-1.0.0
  * @see https://github.com/VibeTensor/vibemcp
  */
 
 // Redirect console.log to stderr FIRST — protects JSON-RPC stdout
 import './utils/logger.js';
 
+import { createRequire } from 'node:module';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 
@@ -23,7 +24,9 @@ import { registerOutlookTools } from './tools/outlook.js';
 import { registerCalendarTools } from './tools/calendar.js';
 import { registerUnifiedTools } from './tools/unified.js';
 
-const VERSION = '0.1.0';
+const require = createRequire(import.meta.url);
+const pkg = require('../package.json') as { version: string };
+const VERSION = pkg.version;
 const SERVER_NAME = 'vibemcp';
 
 // =============================================================================

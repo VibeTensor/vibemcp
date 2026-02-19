@@ -19,7 +19,9 @@ COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/node_modules ./node_modules
 COPY package.json ./
 
-# Create data directory
+# Create persistent config directory
 RUN mkdir -p /root/.vibemcp && chmod 700 /root/.vibemcp
 
-ENTRYPOINT ["node", "dist/cli.js", "serve"]
+# Default: start MCP server on stdio
+# Override with: docker run vibemcp auth google user@gmail.com
+ENTRYPOINT ["node", "dist/cli.js"]

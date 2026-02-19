@@ -96,14 +96,27 @@ Calendar events show 70% savings because the raw Google Calendar API response ha
 
 ### 2. Configure credentials
 
-Create a `.env` file:
+Pass credentials via your MCP client's `env` block:
 
+```json
+{
+  "mcpServers": {
+    "vibemcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@vibetensor/vibemcp"],
+      "env": {
+        "GOOGLE_CLIENT_ID": "your-google-client-id",
+        "GOOGLE_CLIENT_SECRET": "your-google-client-secret",
+        "MICROSOFT_CLIENT_ID": "your-azure-client-id",
+        "MICROSOFT_TENANT_ID": "common"
+      }
+    }
+  }
+}
 ```
-GOOGLE_CLIENT_ID=your-google-client-id
-GOOGLE_CLIENT_SECRET=your-google-client-secret
-MICROSOFT_CLIENT_ID=your-azure-client-id
-MICROSOFT_TENANT_ID=common
-```
+
+Or create a `.env` file in your working directory or `~/.vibemcp/.env`.
 
 See the [Configuration Guide](https://vibemcp.vibetensor.com/reference/configuration) for Google Cloud and Azure setup.
 
@@ -285,6 +298,8 @@ src/
 
 **Key design decisions:**
 
+- **`~/.vibemcp/` config directory** — Tokens, accounts, and MSAL cache stored in a persistent user directory (`~/.vibemcp/`), not relative to the package install location. Overridable via `VIBEMCP_CONFIG_DIR` env var.
+- **Default = MCP server** — Running `vibemcp` (or `npx @vibetensor/vibemcp`) with no arguments starts the MCP stdio server. CLI subcommands (`auth`, `accounts`) handle setup.
 - **stderr-safe logging** — `console.log` redirected to `console.error` at import time, keeping stdout clean for MCP JSON-RPC
 - **Static factory pattern** — Services use `ServiceClass.create(email)` because auth initialization is async
 - **Provider auto-detection** — Calendar tools check the account registry to route to the correct service
@@ -427,7 +442,7 @@ See [PRIVACY.md](PRIVACY.md) for full details and [SECURITY.md](SECURITY.md) for
 | Google OAuth fails | Ensure `http://localhost:4100/code` is an authorized redirect URI. Enable Gmail + Calendar APIs. |
 | Microsoft device code expires | Codes last ~15 minutes. Run `add_microsoft_account` again for a fresh code. |
 | AADSTS errors | Enable "Allow public client flows" in Azure Portal > App Registration > Authentication. |
-| Token file issues | Delete `.oauth2.{email}.json` and re-authenticate. |
+| Token file issues | Delete `~/.vibemcp/.oauth2.{email}.json` and re-authenticate. |
 
 Full troubleshooting guide: [vibemcp.vibetensor.com/guide/getting-started](https://vibemcp.vibetensor.com/guide/getting-started#troubleshooting)
 

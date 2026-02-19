@@ -12,8 +12,8 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "NODE_OPTIONS='--max-old-space-size=4096' jest",
-    "test:coverage": "NODE_OPTIONS='--max-old-space-size=4096' jest --coverage",
+    "test": "cross-env NODE_OPTIONS=--max-old-space-size=4096 jest",
+    "test:coverage": "cross-env NODE_OPTIONS=--max-old-space-size=4096 jest --coverage",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "format": "prettier --write src/",
@@ -66,6 +66,7 @@
     "@types/node": "^20.0.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
+    "cross-env": "^10.1.0",
     "eslint": "^9.0.0",
     "globals": "^16.5.0",
     "jest": "^29.0.0",
@@ -77,6 +78,7 @@
   },
   "files": [
     "dist/",
+    "package.json",
     "README.md",
     "LICENSE"
   ]

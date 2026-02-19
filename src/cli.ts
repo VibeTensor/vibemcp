@@ -1,16 +1,28 @@
 #!/usr/bin/env node
 
 /**
- * VibeMCP CLI — Authentication & Account Management
+ * VibeMCP CLI — MCP Server & Account Management
  *
- * Usage:
- *   npx tsx src/cli.ts auth google user@gmail.com
- *   npx tsx src/cli.ts auth microsoft user@outlook.com
- *   npx tsx src/cli.ts accounts list
- *   npx tsx src/cli.ts accounts remove user@gmail.com
+ * Default (no args): starts the MCP stdio server for Claude Desktop/Code.
+ *
+ * Subcommands:
+ *   vibemcp                              Start MCP server (default)
+ *   vibemcp serve                        Start MCP server (explicit)
+ *   vibemcp auth google <email>          Authenticate a Google account
+ *   vibemcp auth microsoft <email>       Authenticate a Microsoft account
+ *   vibemcp accounts list                List configured accounts
+ *   vibemcp accounts remove <email>      Remove an account
+ *   vibemcp help                         Show this help
+ *
+ * @license PolyForm-Noncommercial-1.0.0
  */
 
 import './utils/logger.js';
+
+import { createRequire } from 'node:module';
+const require = createRequire(import.meta.url);
+const pkg = require('../package.json') as { version: string };
+const VERSION = pkg.version;
 
 import {
   loadAccounts,
@@ -28,20 +40,42 @@ const subcommand = args[1];
 
 function usage(): void {
   console.error(`
-VibeMCP CLI v0.1.0
+VibeMCP v${VERSION} — Token-Optimized Unified MCP Server
 
 Usage:
-  vibemcp auth google <email>       Authenticate a Google account (browser flow)
-  vibemcp auth microsoft <email>    Authenticate a Microsoft account (device code)
-  vibemcp accounts list             List configured accounts
-  vibemcp accounts remove <email>   Remove an account
-  vibemcp help                      Show this help
+  vibemcp                              Start MCP server (stdio transport)
+  vibemcp serve                        Start MCP server (explicit)
+  vibemcp auth google <email>          Authenticate a Google account (browser)
+  vibemcp auth microsoft <email>       Authenticate a Microsoft account (device code)
+  vibemcp accounts list                List configured accounts
+  vibemcp accounts remove <email>      Remove an account
+  vibemcp help                         Show this help
 `);
 }
 
+/**
+ * Start the MCP stdio server.
+ * Dynamically imports index.ts to avoid loading MCP SDK for CLI-only commands.
+ */
+async function startServer(): Promise<void> {
+  // index.ts auto-starts the server on import
+  await import('./index.js');
+}
+
 async function main(): Promise<void> {
-  if (!command || command === 'help' || command === '--help') {
+  // No args or 'serve' → start MCP server
+  if (!command || command === 'serve') {
+    await startServer();
+    return;
+  }
+
+  if (command === 'help' || command === '--help' || command === '-h') {
     usage();
+    return;
+  }
+
+  if (command === 'version' || command === '--version' || command === '-v') {
+    console.error(`VibeMCP v${VERSION}`);
     return;
   }
 
@@ -49,22 +83,29 @@ async function main(): Promise<void> {
     const email = args[2];
     if (!email) {
       console.error('Error: email address required');
-      usage();
+      console.error('Usage: vibemcp auth google <email>');
+      console.error('       vibemcp auth microsoft <email>');
       process.exit(1);
     }
 
     if (subcommand === 'google') {
       console.error(`Authenticating Google account: ${email}`);
-      const authUrl = await initiateGoogleAuth(email);
-      console.error(`\nOpen this URL in your browser:\n${authUrl}\n`);
+      const result = await initiateGoogleAuth(email);
+      if (!result) {
+        console.error(
+          'Failed to start Google OAuth flow. Check your GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.',
+        );
+        process.exit(1);
+      }
+      console.error(`\nOpen this URL in your browser:\n${result.authUrl}\n`);
       console.error('Waiting for callback...');
 
       const success = await completeGoogleAuth(email);
       if (success) {
         addGoogleAccount(email);
-        console.error(`Google account ${email} authenticated and registered.`);
+        console.error(`\nGoogle account ${email} authenticated and registered.`);
       } else {
-        console.error('Authentication failed.');
+        console.error('Authentication failed. Make sure you completed the browser flow.');
         process.exit(1);
       }
     } else if (subcommand === 'microsoft') {
@@ -72,7 +113,7 @@ async function main(): Promise<void> {
       const flow = await initiateDeviceFlow(email);
 
       if (!flow) {
-        console.error('Failed to initiate device code flow.');
+        console.error('Failed to initiate device code flow. Check your MICROSOFT_CLIENT_ID.');
         process.exit(1);
       }
 
@@ -82,23 +123,23 @@ async function main(): Promise<void> {
       const token = await completeDeviceFlow(email);
       if (token) {
         addMicrosoftAccount(email);
-        console.error(`Microsoft account ${email} authenticated and registered.`);
+        console.error(`\nMicrosoft account ${email} authenticated and registered.`);
       } else {
-        console.error('Authentication failed or timed out.');
+        console.error('Authentication failed or timed out. Try again.');
         process.exit(1);
       }
     } else {
       console.error(`Unknown auth provider: ${subcommand}`);
-      usage();
+      console.error('Supported providers: google, microsoft');
       process.exit(1);
     }
   } else if (command === 'accounts') {
     if (subcommand === 'list') {
       const data = loadAccounts();
-      console.error('\nConfigured Accounts:');
+      console.error(`\nVibeMCP Accounts (v${VERSION}):`);
       console.error('\nGoogle:');
       if (data.google_accounts.length === 0) {
-        console.error('  (none)');
+        console.error('  (none) — run: vibemcp auth google <email>');
       } else {
         for (const a of data.google_accounts) {
           console.error(`  - ${a.email} (${a.accountType})`);
@@ -106,16 +147,18 @@ async function main(): Promise<void> {
       }
       console.error('\nMicrosoft:');
       if (data.microsoft_accounts.length === 0) {
-        console.error('  (none)');
+        console.error('  (none) — run: vibemcp auth microsoft <email>');
       } else {
         for (const a of data.microsoft_accounts) {
           console.error(`  - ${a.email} (${a.accountType})`);
         }
       }
+      console.error('');
     } else if (subcommand === 'remove') {
       const email = args[2];
       if (!email) {
         console.error('Error: email address required');
+        console.error('Usage: vibemcp accounts remove <email>');
         process.exit(1);
       }
       const removedG = removeGoogleAccount(email);
@@ -127,7 +170,7 @@ async function main(): Promise<void> {
       }
     } else {
       console.error(`Unknown accounts command: ${subcommand}`);
-      usage();
+      console.error('Available: list, remove');
       process.exit(1);
     }
   } else {
