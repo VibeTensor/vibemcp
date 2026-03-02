@@ -16,6 +16,11 @@ export default withMermaid(
     description: 'Token-Optimized Unified MCP Server for Gmail & Microsoft 365',
     head: [
       ['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+      ['script', {
+        defer: 'true',
+        src: 'https://static.cloudflareinsights.com/beacon.min.js',
+        'data-cf-beacon': '{"token": "VIBEMCP_DOCS_CF_ANALYTICS_TOKEN"}',
+      }],
     ],
 
     themeConfig: {
