@@ -59,10 +59,16 @@ export function registerContactTools(server: McpServer): void {
     'contact_search',
     'Search contacts by name or email across Google or Microsoft. Uses Google People API search or Microsoft Graph /me/people endpoint.',
     {
-      account: z.string().email().describe('Email of the authenticated account to search contacts from'),
+      account: z
+        .string()
+        .email()
+        .describe('Email of the authenticated account to search contacts from'),
       query: z.string().describe('Search query (name or email)'),
       max_results: z.coerce.number().min(1).max(100).default(10).describe('Max results to return'),
-      format: z.enum(['toon', 'json']).default('toon').describe('Output format (toon saves 50% tokens)'),
+      format: z
+        .enum(['toon', 'json'])
+        .default('toon')
+        .describe('Output format (toon saves 50% tokens)'),
     },
     async ({ account, query, max_results, format }) => {
       try {
@@ -106,7 +112,10 @@ export function registerContactTools(server: McpServer): void {
     {
       account: z.string().email().describe('Email of the authenticated account'),
       emails: z.array(z.string().email()).min(1).max(50).describe('Email addresses to resolve'),
-      format: z.enum(['toon', 'json']).default('toon').describe('Output format (toon saves 50% tokens)'),
+      format: z
+        .enum(['toon', 'json'])
+        .default('toon')
+        .describe('Output format (toon saves 50% tokens)'),
     },
     async ({ account, emails, format }) => {
       try {
@@ -145,8 +154,16 @@ export function registerContactTools(server: McpServer): void {
     'List contacts from a Google or Microsoft account. Returns email, name, and provider-specific metadata.',
     {
       account: z.string().email().describe('Email of the authenticated account'),
-      max_results: z.coerce.number().min(1).max(250).default(50).describe('Maximum contacts to return'),
-      format: z.enum(['toon', 'json']).default('toon').describe('Output format (toon saves 50% tokens)'),
+      max_results: z.coerce
+        .number()
+        .min(1)
+        .max(250)
+        .default(50)
+        .describe('Maximum contacts to return'),
+      format: z
+        .enum(['toon', 'json'])
+        .default('toon')
+        .describe('Output format (toon saves 50% tokens)'),
     },
     async ({ account, max_results, format }) => {
       try {

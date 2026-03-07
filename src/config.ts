@@ -89,7 +89,14 @@ export const AZURE_TENANT_ID = getEnv('MICROSOFT_TENANT_ID', 'common');
 export const MS_TOKEN_CACHE_PATH = path.join(CONFIG_DIR, 'ms-token-cache.json');
 
 // Base scopes - work for ALL Microsoft accounts (personal + business)
-export const MS_SCOPES_BASE = ['Mail.ReadWrite', 'Mail.Send', 'Calendars.ReadWrite', 'User.Read', 'Contacts.Read', 'People.Read'];
+export const MS_SCOPES_BASE = [
+  'Mail.ReadWrite',
+  'Mail.Send',
+  'Calendars.ReadWrite',
+  'User.Read',
+  'Contacts.Read',
+  'People.Read',
+];
 
 // Teams scopes - only work for business/organizational accounts
 export const MS_SCOPES_TEAMS = [

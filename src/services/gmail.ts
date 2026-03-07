@@ -456,9 +456,7 @@ export class GmailService {
       startTime: res.data.startTime
         ? new Date(Number(res.data.startTime)).toISOString()
         : undefined,
-      endTime: res.data.endTime
-        ? new Date(Number(res.data.endTime)).toISOString()
-        : undefined,
+      endTime: res.data.endTime ? new Date(Number(res.data.endTime)).toISOString() : undefined,
     };
   }
 
@@ -475,10 +473,8 @@ export class GmailService {
     if (settings.responseSubject) requestBody.responseSubject = settings.responseSubject;
     if (settings.responseBodyPlainText)
       requestBody.responseBodyPlainText = settings.responseBodyPlainText;
-    if (settings.startTime)
-      requestBody.startTime = String(new Date(settings.startTime).getTime());
-    if (settings.endTime)
-      requestBody.endTime = String(new Date(settings.endTime).getTime());
+    if (settings.startTime) requestBody.startTime = String(new Date(settings.startTime).getTime());
+    if (settings.endTime) requestBody.endTime = String(new Date(settings.endTime).getTime());
 
     const res = await this.gmail.users.settings.updateVacation({
       userId: 'me',

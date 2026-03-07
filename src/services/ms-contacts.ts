@@ -69,9 +69,7 @@ export class MicrosoftContactsService {
     const emailAddresses = (c['emailAddresses'] as Array<Record<string, unknown>>) ?? [];
     const scoredEmails = (c['scoredEmailAddresses'] as Array<Record<string, unknown>>) ?? [];
     const primaryEmail =
-      (emailAddresses[0]?.['address'] as string) ??
-      (scoredEmails[0]?.['address'] as string) ??
-      '';
+      (emailAddresses[0]?.['address'] as string) ?? (scoredEmails[0]?.['address'] as string) ?? '';
     return {
       email: primaryEmail,
       name: (c['displayName'] as string) ?? '',
@@ -86,8 +84,8 @@ export class MicrosoftContactsService {
 
   async listContacts(top: number = 100, filter?: string): Promise<MSContact[]> {
     const params: Record<string, string> = {
-      '$top': String(top),
-      '$select': 'displayName,emailAddresses,jobTitle,department',
+      $top: String(top),
+      $select: 'displayName,emailAddresses,jobTitle,department',
     };
     if (filter) params['$filter'] = filter;
 
@@ -98,9 +96,9 @@ export class MicrosoftContactsService {
 
   async searchPeople(query: string, top: number = 10): Promise<MSContact[]> {
     const params: Record<string, string> = {
-      '$search': `"${query}"`,
-      '$top': String(top),
-      '$select': 'displayName,emailAddresses,jobTitle,department',
+      $search: `"${query}"`,
+      $top: String(top),
+      $select: 'displayName,emailAddresses,jobTitle,department',
     };
     const data = await this.get('/me/people', params);
     const value = (data['value'] as Array<Record<string, unknown>>) ?? [];

@@ -93,10 +93,11 @@ export function parseRRuleForMicrosoft(
   // Extract the start date (date portion only) from the event start
   const startDate = eventStart.includes('T') ? eventStart.split('T')[0]! : eventStart;
 
-  const range: { type: string; startDate: string; endDate?: string; numberOfOccurrences?: number } = {
-    type: 'noEnd',
-    startDate,
-  };
+  const range: { type: string; startDate: string; endDate?: string; numberOfOccurrences?: number } =
+    {
+      type: 'noEnd',
+      startDate,
+    };
 
   if (parts['COUNT']) {
     range.type = 'numbered';
@@ -106,9 +107,10 @@ export function parseRRuleForMicrosoft(
     // UNTIL may be a date like 20261231 or 20261231T235959Z
     const until = parts['UNTIL'];
     const datePart = until.includes('T') ? until.split('T')[0]! : until;
-    range.endDate = datePart.length === 8
-      ? `${datePart.substring(0, 4)}-${datePart.substring(4, 6)}-${datePart.substring(6, 8)}`
-      : datePart;
+    range.endDate =
+      datePart.length === 8
+        ? `${datePart.substring(0, 4)}-${datePart.substring(4, 6)}-${datePart.substring(6, 8)}`
+        : datePart;
   }
 
   return { pattern, range };
@@ -168,7 +170,11 @@ export function registerCalendarTools(server: McpServer): void {
           content: [
             {
               type: 'text' as const,
-              text: logError('calendar_list_calendars', e as Error, detectProvider(account) === 'google' ? ErrorCategory.GCAL : ErrorCategory.MS_CAL),
+              text: logError(
+                'calendar_list_calendars',
+                e as Error,
+                detectProvider(account) === 'google' ? ErrorCategory.GCAL : ErrorCategory.MS_CAL,
+              ),
             },
           ],
           isError: true,
@@ -256,7 +262,11 @@ export function registerCalendarTools(server: McpServer): void {
           content: [
             {
               type: 'text' as const,
-              text: logError('calendar_list_events', e as Error, detectProvider(account) === 'google' ? ErrorCategory.GCAL : ErrorCategory.MS_CAL),
+              text: logError(
+                'calendar_list_events',
+                e as Error,
+                detectProvider(account) === 'google' ? ErrorCategory.GCAL : ErrorCategory.MS_CAL,
+              ),
             },
           ],
           isError: true,
@@ -355,7 +365,8 @@ export function registerCalendarTools(server: McpServer): void {
           };
         }
       } catch (e) {
-        const cat = detectProvider(account) === 'google' ? ErrorCategory.GCAL : ErrorCategory.MS_CAL;
+        const cat =
+          detectProvider(account) === 'google' ? ErrorCategory.GCAL : ErrorCategory.MS_CAL;
         return {
           content: [
             {
@@ -403,7 +414,11 @@ export function registerCalendarTools(server: McpServer): void {
           content: [
             {
               type: 'text' as const,
-              text: logError('calendar_delete_event', e as Error, detectProvider(account) === 'google' ? ErrorCategory.GCAL : ErrorCategory.MS_CAL),
+              text: logError(
+                'calendar_delete_event',
+                e as Error,
+                detectProvider(account) === 'google' ? ErrorCategory.GCAL : ErrorCategory.MS_CAL,
+              ),
             },
           ],
           isError: true,
@@ -428,10 +443,24 @@ export function registerCalendarTools(server: McpServer): void {
       timezone: z.string().optional().describe('Timezone (e.g., UTC, America/New_York)'),
       description: z.string().optional().describe('New event description/body'),
       location: z.string().optional().describe('New event location'),
-      attendees: z.array(z.string().email()).optional().describe('Updated attendee emails (Google only)'),
+      attendees: z
+        .array(z.string().email())
+        .optional()
+        .describe('Updated attendee emails (Google only)'),
       calendarId: z.string().optional().describe('Calendar ID (default: primary, Google only)'),
     },
-    async ({ account, eventId, subject, start, end, timezone, description, location, attendees, calendarId }) => {
+    async ({
+      account,
+      eventId,
+      subject,
+      start,
+      end,
+      timezone,
+      description,
+      location,
+      attendees,
+      calendarId,
+    }) => {
       try {
         const provider = detectProvider(account);
 
@@ -459,7 +488,8 @@ export function registerCalendarTools(server: McpServer): void {
           return { content: [{ type: 'text' as const, text: JSON.stringify(event, null, 2) }] };
         }
       } catch (e) {
-        const cat = detectProvider(account) === 'google' ? ErrorCategory.GCAL : ErrorCategory.MS_CAL;
+        const cat =
+          detectProvider(account) === 'google' ? ErrorCategory.GCAL : ErrorCategory.MS_CAL;
         return {
           content: [
             {
@@ -482,7 +512,9 @@ export function registerCalendarTools(server: McpServer): void {
     'Check free/busy availability for calendars or people in a time range.',
     {
       account: z.string().email().describe('Email of the authenticated account'),
-      emails: z.array(z.string()).describe('Email addresses or calendar IDs to check availability for'),
+      emails: z
+        .array(z.string())
+        .describe('Email addresses or calendar IDs to check availability for'),
       start_time: z.string().describe('Start of time range (ISO 8601)'),
       end_time: z.string().describe('End of time range (ISO 8601)'),
       format: z.enum(['toon', 'json']).default('toon').describe('Output format'),
@@ -509,7 +541,8 @@ export function registerCalendarTools(server: McpServer): void {
           ],
         };
       } catch (e) {
-        const cat = detectProvider(account) === 'google' ? ErrorCategory.GCAL : ErrorCategory.MS_CAL;
+        const cat =
+          detectProvider(account) === 'google' ? ErrorCategory.GCAL : ErrorCategory.MS_CAL;
         return {
           content: [
             {

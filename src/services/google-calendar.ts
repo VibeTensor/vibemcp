@@ -114,12 +114,8 @@ export class GoogleCalendarService {
   }): Promise<CalendarEvent> {
     const event: calendar_v3.Schema$Event = {
       summary: params.summary,
-      start: params.start.includes('T')
-        ? { dateTime: params.start }
-        : { date: params.start },
-      end: params.end.includes('T')
-        ? { dateTime: params.end }
-        : { date: params.end },
+      start: params.start.includes('T') ? { dateTime: params.start } : { date: params.start },
+      end: params.end.includes('T') ? { dateTime: params.end } : { date: params.end },
       description: params.description,
       location: params.location,
       attendees: params.attendees?.map((email) => ({ email })),
@@ -209,7 +205,7 @@ export class GoogleCalendarService {
     return Object.entries(calendars).map(([id, cal]) => ({
       calendar: id,
       busy: (
-        (cal as Record<string, unknown>).busy as Array<{ start: string; end: string }> ?? []
+        ((cal as Record<string, unknown>).busy as Array<{ start: string; end: string }>) ?? []
       ).map((slot) => ({
         start: slot.start ?? '',
         end: slot.end ?? '',

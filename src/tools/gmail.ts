@@ -347,10 +347,7 @@ export function registerGmailTools(server: McpServer): void {
     {
       account: z.string().email().describe('Google account email'),
       name: z.string().describe('Label name to create'),
-      format: z
-        .enum(['toon', 'json'])
-        .default('toon')
-        .describe('Output format'),
+      format: z.enum(['toon', 'json']).default('toon').describe('Output format'),
     },
     async ({ account, name, format }) => {
       try {
@@ -393,15 +390,17 @@ export function registerGmailTools(server: McpServer): void {
         .enum(['show', 'hide'])
         .optional()
         .describe('Visibility in the message list'),
-      format: z
-        .enum(['toon', 'json'])
-        .default('toon')
-        .describe('Output format'),
+      format: z.enum(['toon', 'json']).default('toon').describe('Output format'),
     },
     async ({ account, label_id, name, label_list_visibility, message_list_visibility, format }) => {
       try {
         const svc = await getGmail(account);
-        const label = await svc.updateLabel(label_id, name, label_list_visibility, message_list_visibility);
+        const label = await svc.updateLabel(
+          label_id,
+          name,
+          label_list_visibility,
+          message_list_visibility,
+        );
         return {
           content: [
             {
@@ -463,10 +462,7 @@ export function registerGmailTools(server: McpServer): void {
     {
       account: z.string().email().describe('Google account email'),
       message_ids: z.array(z.string()).describe('Array of message IDs to modify'),
-      add_label_ids: z
-        .array(z.string())
-        .optional()
-        .describe('Label IDs to add to each message'),
+      add_label_ids: z.array(z.string()).optional().describe('Label IDs to add to each message'),
       remove_label_ids: z
         .array(z.string())
         .optional()
@@ -474,10 +470,16 @@ export function registerGmailTools(server: McpServer): void {
     },
     async ({ account, message_ids, add_label_ids, remove_label_ids }) => {
       try {
-        if ((!add_label_ids || add_label_ids.length === 0) && (!remove_label_ids || remove_label_ids.length === 0)) {
+        if (
+          (!add_label_ids || add_label_ids.length === 0) &&
+          (!remove_label_ids || remove_label_ids.length === 0)
+        ) {
           return {
             content: [
-              { type: 'text' as const, text: 'Error: Provide at least one of add_label_ids or remove_label_ids.' },
+              {
+                type: 'text' as const,
+                text: 'Error: Provide at least one of add_label_ids or remove_label_ids.',
+              },
             ],
             isError: true,
           };
@@ -517,10 +519,7 @@ export function registerGmailTools(server: McpServer): void {
       account: z.string().email().describe('Google account email'),
       message_id: z.string().describe('Gmail message ID containing the attachment'),
       attachment_id: z.string().describe('Attachment ID from the message metadata'),
-      format: z
-        .enum(['toon', 'json'])
-        .default('toon')
-        .describe('Output format'),
+      format: z.enum(['toon', 'json']).default('toon').describe('Output format'),
     },
     async ({ account, message_id, attachment_id, format }) => {
       try {
@@ -624,10 +623,7 @@ export function registerGmailTools(server: McpServer): void {
     'Get current Gmail vacation (out-of-office) auto-reply settings.',
     {
       account: z.string().email().describe('Google account email'),
-      format: z
-        .enum(['toon', 'json'])
-        .default('toon')
-        .describe('Output format'),
+      format: z.enum(['toon', 'json']).default('toon').describe('Output format'),
     },
     async ({ account, format }) => {
       try {

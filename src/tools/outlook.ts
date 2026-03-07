@@ -351,11 +351,7 @@ export function registerOutlookTools(server: McpServer): void {
           content: [
             {
               type: 'text' as const,
-              text: formatOutput(categories, format, 'categories', [
-                'id',
-                'displayName',
-                'color',
-              ]),
+              text: formatOutput(categories, format, 'categories', ['id', 'displayName', 'color']),
             },
           ],
         };
@@ -421,13 +417,8 @@ export function registerOutlookTools(server: McpServer): void {
     {
       account: z.string().email().describe('Microsoft account email'),
       message_id: z.string().describe('Message ID to flag'),
-      status: z
-        .enum(['flagged', 'complete', 'notFlagged'])
-        .describe('Flag status to set'),
-      due_date: z
-        .string()
-        .optional()
-        .describe('Due date for flagged items in ISO 8601 format'),
+      status: z.enum(['flagged', 'complete', 'notFlagged']).describe('Flag status to set'),
+      due_date: z.string().optional().describe('Due date for flagged items in ISO 8601 format'),
     },
     async ({ account, message_id, status, due_date }) => {
       try {
@@ -464,18 +455,11 @@ export function registerOutlookTools(server: McpServer): void {
     'Batch update multiple Outlook messages at once. Supports marking read/unread, archiving, and moving.',
     {
       account: z.string().email().describe('Microsoft account email'),
-      message_ids: z
-        .array(z.string())
-        .min(1)
-        .max(100)
-        .describe('Array of message IDs to update'),
+      message_ids: z.array(z.string()).min(1).max(100).describe('Array of message IDs to update'),
       action: z
         .enum(['mark_read', 'mark_unread', 'archive', 'move'])
         .describe('Action to perform on all messages'),
-      destination_folder: z
-        .string()
-        .optional()
-        .describe('Folder ID for move action'),
+      destination_folder: z.string().optional().describe('Folder ID for move action'),
     },
     async ({ account, message_ids, action, destination_folder }) => {
       try {
@@ -562,7 +546,10 @@ export function registerOutlookTools(server: McpServer): void {
               text:
                 format === 'json'
                   ? JSON.stringify(attachment, null, 2)
-                  : encodeToonSingle('attachment', attachment as unknown as Record<string, unknown>),
+                  : encodeToonSingle(
+                      'attachment',
+                      attachment as unknown as Record<string, unknown>,
+                    ),
             },
           ],
         };
@@ -648,11 +635,7 @@ export function registerOutlookTools(server: McpServer): void {
           content: [
             {
               type: 'text' as const,
-              text: formatOutput(
-                settings,
-                format,
-                'autoReplySettings',
-              ),
+              text: formatOutput(settings, format, 'autoReplySettings'),
             },
           ],
         };
@@ -679,17 +662,9 @@ export function registerOutlookTools(server: McpServer): void {
     'Configure auto-reply (out-of-office) settings for an Outlook account.',
     {
       account: z.string().email().describe('Microsoft account email'),
-      status: z
-        .enum(['disabled', 'alwaysEnabled', 'scheduled'])
-        .describe('Auto-reply status'),
-      internal_message: z
-        .string()
-        .optional()
-        .describe('Reply message for internal senders'),
-      external_message: z
-        .string()
-        .optional()
-        .describe('Reply message for external senders'),
+      status: z.enum(['disabled', 'alwaysEnabled', 'scheduled']).describe('Auto-reply status'),
+      internal_message: z.string().optional().describe('Reply message for internal senders'),
+      external_message: z.string().optional().describe('Reply message for external senders'),
       external_audience: z
         .enum(['none', 'contactsOnly', 'all'])
         .optional()
@@ -703,12 +678,23 @@ export function registerOutlookTools(server: McpServer): void {
         .optional()
         .describe('End date for scheduled auto-reply in ISO 8601 format'),
     },
-    async ({ account, status, internal_message, external_message, external_audience, start_date, end_date }) => {
+    async ({
+      account,
+      status,
+      internal_message,
+      external_message,
+      external_audience,
+      start_date,
+      end_date,
+    }) => {
       try {
         if (status === 'scheduled' && (!start_date || !end_date)) {
           return {
             content: [
-              { type: 'text' as const, text: 'Error: start_date and end_date are required when status is "scheduled".' },
+              {
+                type: 'text' as const,
+                text: 'Error: start_date and end_date are required when status is "scheduled".',
+              },
             ],
             isError: true,
           };
