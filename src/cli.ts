@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * VibeMCP CLI — MCP Server & Account Management
+ * VibeMCP CLI - MCP Server & Account Management
  *
  * Default (no args): starts the MCP stdio server for Claude Desktop/Code.
  *
@@ -40,7 +40,7 @@ const subcommand = args[1];
 
 function usage(): void {
   console.error(`
-VibeMCP v${VERSION} — Token-Optimized Unified MCP Server
+VibeMCP v${VERSION} - Token-Optimized Unified MCP Server
 
 Usage:
   vibemcp                              Start MCP server (stdio transport)
@@ -139,7 +139,7 @@ async function main(): Promise<void> {
       console.error(`\nVibeMCP Accounts (v${VERSION}):`);
       console.error('\nGoogle:');
       if (data.google_accounts.length === 0) {
-        console.error('  (none) — run: vibemcp auth google <email>');
+        console.error('  (none) - run: vibemcp auth google <email>');
       } else {
         for (const a of data.google_accounts) {
           console.error(`  - ${a.email} (${a.accountType})`);
@@ -147,7 +147,7 @@ async function main(): Promise<void> {
       }
       console.error('\nMicrosoft:');
       if (data.microsoft_accounts.length === 0) {
-        console.error('  (none) — run: vibemcp auth microsoft <email>');
+        console.error('  (none) - run: vibemcp auth microsoft <email>');
       } else {
         for (const a of data.microsoft_accounts) {
           console.error(`  - ${a.email} (${a.accountType})`);

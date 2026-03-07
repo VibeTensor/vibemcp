@@ -22,14 +22,14 @@ hero:
 features:
   - icon: "&#9889;"
     title: 51% Fewer Tokens
-    details: TOON format declares the schema once and streams rows — no repeated JSON keys. Calendar events save up to 70%.
+    details: TOON format declares the schema once and streams rows with no repeated JSON keys. Calendar events save up to 70%.
     link: /guide/toon-format
     linkText: How TOON works
   - icon: "&#128231;"
     title: Gmail + Outlook in One Server
-    details: 31 tools across Gmail, Outlook Mail, Google Calendar, and Outlook Calendar. No need to install separate MCP servers.
+    details: 51 tools across Gmail, Outlook Mail, Google Calendar, Outlook Calendar, and Contacts. No need to install separate MCP servers.
     link: /reference/tools
-    linkText: See all 31 tools
+    linkText: See all 51 tools
   - icon: "&#128101;"
     title: Multi-Account Support
     details: Connect multiple Google and Microsoft accounts. Cross-account search, unified inbox, and merged calendar views.
@@ -44,15 +44,15 @@ features:
 
 <div class="vp-doc" style="max-width: 688px; margin: 0 auto; padding: 0 24px;">
 
-## Token Savings — Real Benchmarks
+## Token Savings (Real Benchmarks)
 
 Measured on live accounts with real data, February 2026:
 
 | Dataset | JSON Tokens | TOON Tokens | Savings |
 |:--------|:-----------:|:-----------:|:-------:|
-| Gmail — 10 messages | 961 | 591 | **38%** |
-| Outlook — 10 messages | 1,480 | 872 | **41%** |
-| Google Calendar — 11 events | 1,462 | 441 | **70%** |
+| Gmail (10 messages) | 961 | 591 | **38%** |
+| Outlook (10 messages) | 1,480 | 872 | **41%** |
+| Google Calendar (11 events) | 1,462 | 441 | **70%** |
 | **Combined** | **3,903** | **1,904** | **51%** |
 
 Every tool call that returns data costs fewer tokens. Over a conversation with dozens of tool calls, the savings compound.
@@ -72,10 +72,13 @@ flowchart TD
     TOON --> G
     TOON --> M
 
-    style MCP fill:#0ea5e9,stroke:#0284c7,color:#fff
-    style TOON fill:#06b6d4,stroke:#0891b2,color:#fff
-    style G fill:#34d399,stroke:#059669,color:#fff
-    style M fill:#60a5fa,stroke:#3b82f6,color:#fff
+    classDef server fill:#0ea5e9,stroke:#0284c7,color:#fff
+    classDef encoder fill:#06b6d4,stroke:#0891b2,color:#fff
+    classDef provider fill:#34d399,stroke:#059669,color:#fff
+
+    class MCP server
+    class TOON encoder
+    class G,M provider
 ```
 
 ## Quick Start
@@ -133,8 +136,8 @@ You: "Create a meeting with the team on Friday at 2pm"
 
 ## Built By
 
-[VibeTensor Private Limited](https://vibetensor.com) — Building token-efficient AI infrastructure.
+[VibeTensor Private Limited](https://vibetensor.com) - Building token-efficient AI infrastructure.
 
-[PolyForm Noncommercial License](https://polyformproject.org/licenses/noncommercial/1.0.0/) — Free for personal use, research, education, and hobby projects.
+[PolyForm Noncommercial License](https://polyformproject.org/licenses/noncommercial/1.0.0/) - Free for personal use, research, education, and hobby projects.
 
 </div>

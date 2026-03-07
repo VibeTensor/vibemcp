@@ -11,7 +11,7 @@
  * @see https://github.com/VibeTensor/vibemcp
  */
 
-// Redirect console.log to stderr FIRST — protects JSON-RPC stdout
+// Redirect console.log to stderr FIRST - protects JSON-RPC stdout
 import './utils/logger.js';
 
 import { createRequire } from 'node:module';
@@ -23,6 +23,7 @@ import { registerGmailTools } from './tools/gmail.js';
 import { registerOutlookTools } from './tools/outlook.js';
 import { registerCalendarTools } from './tools/calendar.js';
 import { registerUnifiedTools } from './tools/unified.js';
+import { registerContactTools } from './tools/contacts.js';
 
 const require = createRequire(import.meta.url);
 const pkg = require('../package.json') as { version: string };
@@ -43,10 +44,11 @@ const server = new McpServer({
 // =============================================================================
 
 registerAdminTools(server); // list_accounts, add_google_account, etc.
-registerGmailTools(server); // gmail_list_messages, gmail_send_message, etc.
-registerOutlookTools(server); // outlook_list_messages, outlook_send_message, etc.
-registerCalendarTools(server); // calendar_list_events, calendar_create_event, etc.
+registerGmailTools(server); // gmail_list_messages, gmail_send_message, labels, batch, vacation, etc.
+registerOutlookTools(server); // outlook_list_messages, categories, flags, batch, auto-reply, etc.
+registerCalendarTools(server); // calendar_list_events, free_busy, recurring, etc.
 registerUnifiedTools(server); // unified_search, unified_inbox, unified_calendar
+registerContactTools(server); // contact_search, resolve_contacts, contact_list
 
 // =============================================================================
 // Start Server
@@ -56,7 +58,7 @@ async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error(`VibeMCP v${VERSION} running on stdio`);
-  console.error('Modules: admin, gmail, outlook, calendar, unified');
+  console.error('Modules: admin, gmail, outlook, calendar, unified, contacts');
 }
 
 main().catch((error) => {

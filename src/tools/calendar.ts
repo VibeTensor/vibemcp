@@ -36,6 +36,84 @@ async function getMSCalendar(account: string): Promise<MicrosoftCalendarService>
   );
 }
 
+// =====================================================================
+// RRULE to Microsoft Graph recurrence converter
+// =====================================================================
+
+const RRULE_FREQ_MAP: Record<string, string> = {
+  DAILY: 'daily',
+  WEEKLY: 'weekly',
+  MONTHLY: 'absoluteMonthly',
+  YEARLY: 'absoluteYearly',
+};
+
+const RRULE_DAY_MAP: Record<string, string> = {
+  MO: 'monday',
+  TU: 'tuesday',
+  WE: 'wednesday',
+  TH: 'thursday',
+  FR: 'friday',
+  SA: 'saturday',
+  SU: 'sunday',
+};
+
+/**
+ * Parse an RRULE string into a Microsoft Graph recurrence object.
+ *
+ * Supports FREQ, INTERVAL, BYDAY, COUNT, and UNTIL.
+ * Example input: "FREQ=WEEKLY;BYDAY=MO,WE,FR;COUNT=10"
+ */
+export function parseRRuleForMicrosoft(
+  rrule: string,
+  eventStart: string,
+): {
+  pattern: { type: string; interval: number; daysOfWeek?: string[] };
+  range: { type: string; startDate: string; endDate?: string; numberOfOccurrences?: number };
+} {
+  const parts: Record<string, string> = {};
+  for (const segment of rrule.split(';')) {
+    const [key, value] = segment.split('=');
+    if (key && value) parts[key.toUpperCase()] = value;
+  }
+
+  const freq = parts['FREQ'] ?? 'WEEKLY';
+  const interval = parts['INTERVAL'] ? parseInt(parts['INTERVAL'], 10) : 1;
+  const daysOfWeek = parts['BYDAY']
+    ? parts['BYDAY'].split(',').map((d) => RRULE_DAY_MAP[d.trim()] ?? d.toLowerCase())
+    : undefined;
+
+  const pattern: { type: string; interval: number; daysOfWeek?: string[] } = {
+    type: RRULE_FREQ_MAP[freq] ?? 'weekly',
+    interval,
+  };
+  if (daysOfWeek?.length) {
+    pattern.daysOfWeek = daysOfWeek;
+  }
+
+  // Extract the start date (date portion only) from the event start
+  const startDate = eventStart.includes('T') ? eventStart.split('T')[0]! : eventStart;
+
+  const range: { type: string; startDate: string; endDate?: string; numberOfOccurrences?: number } = {
+    type: 'noEnd',
+    startDate,
+  };
+
+  if (parts['COUNT']) {
+    range.type = 'numbered';
+    range.numberOfOccurrences = parseInt(parts['COUNT'], 10);
+  } else if (parts['UNTIL']) {
+    range.type = 'endDate';
+    // UNTIL may be a date like 20261231 or 20261231T235959Z
+    const until = parts['UNTIL'];
+    const datePart = until.includes('T') ? until.split('T')[0]! : until;
+    range.endDate = datePart.length === 8
+      ? `${datePart.substring(0, 4)}-${datePart.substring(4, 6)}-${datePart.substring(6, 8)}`
+      : datePart;
+  }
+
+  return { pattern, range };
+}
+
 export function registerCalendarTools(server: McpServer): void {
   // ===================================================================
   // List Calendars
@@ -90,7 +168,7 @@ export function registerCalendarTools(server: McpServer): void {
           content: [
             {
               type: 'text' as const,
-              text: logError('calendar_list_calendars', e as Error, ErrorCategory.GCAL),
+              text: logError('calendar_list_calendars', e as Error, detectProvider(account) === 'google' ? ErrorCategory.GCAL : ErrorCategory.MS_CAL),
             },
           ],
           isError: true,
@@ -178,7 +256,7 @@ export function registerCalendarTools(server: McpServer): void {
           content: [
             {
               type: 'text' as const,
-              text: logError('calendar_list_events', e as Error, ErrorCategory.GCAL),
+              text: logError('calendar_list_events', e as Error, detectProvider(account) === 'google' ? ErrorCategory.GCAL : ErrorCategory.MS_CAL),
             },
           ],
           isError: true,
@@ -193,18 +271,25 @@ export function registerCalendarTools(server: McpServer): void {
 
   server.tool(
     'calendar_create_event',
-    'Create a new calendar event (Google Calendar or Outlook).',
+    'Create a new calendar event (Google Calendar or Outlook). Supports recurring events via recurrence_rule.',
     {
       account: z.string().email().describe('Account email'),
       summary: z.string().describe('Event title/subject'),
       start: z.string().describe('Start time (ISO 8601)'),
       end: z.string().describe('End time (ISO 8601)'),
       description: z.string().optional().describe('Event description/body'),
-      location: z.string().optional(),
-      attendees: z.array(z.string().email()).optional(),
-      calendarId: z.string().optional(),
-      timezone: z.string().default('UTC'),
+      location: z.string().optional().describe('Event location'),
+      attendees: z.array(z.string().email()).optional().describe('Attendee email addresses'),
+      calendarId: z.string().optional().describe('Calendar ID (default: primary/default)'),
+      timezone: z.string().default('UTC').describe('Timezone for the event'),
       createOnlineMeeting: z.boolean().default(false).describe('Create Teams/Meet link'),
+      recurrence_rule: z
+        .string()
+        .optional()
+        .describe(
+          'RRULE string for recurring events, e.g., "FREQ=WEEKLY;BYDAY=MO,WE,FR;COUNT=10". ' +
+            'Automatically converted for each provider.',
+        ),
     },
     async ({
       account,
@@ -217,12 +302,14 @@ export function registerCalendarTools(server: McpServer): void {
       calendarId,
       timezone,
       createOnlineMeeting,
+      recurrence_rule,
     }) => {
       try {
         const provider = detectProvider(account);
 
         if (provider === 'google') {
           const svc = await getGoogleCalendar(account);
+          const recurrence = recurrence_rule ? [`RRULE:${recurrence_rule}`] : undefined;
           const event = await svc.createEvent({
             summary,
             start,
@@ -231,6 +318,7 @@ export function registerCalendarTools(server: McpServer): void {
             location,
             attendees,
             calendarId,
+            recurrence,
           });
           return {
             content: [
@@ -242,6 +330,9 @@ export function registerCalendarTools(server: McpServer): void {
           };
         } else {
           const svc = await getMSCalendar(account);
+          const msRecurrence = recurrence_rule
+            ? parseRRuleForMicrosoft(recurrence_rule, start)
+            : undefined;
           const event = await svc.createEvent({
             subject: summary,
             start,
@@ -252,6 +343,7 @@ export function registerCalendarTools(server: McpServer): void {
             attendees,
             isOnline: createOnlineMeeting,
             calendarId,
+            recurrence: msRecurrence,
           });
           return {
             content: [
@@ -263,11 +355,12 @@ export function registerCalendarTools(server: McpServer): void {
           };
         }
       } catch (e) {
+        const cat = detectProvider(account) === 'google' ? ErrorCategory.GCAL : ErrorCategory.MS_CAL;
         return {
           content: [
             {
               type: 'text' as const,
-              text: logError('calendar_create_event', e as Error, ErrorCategory.GCAL),
+              text: logError('calendar_create_event', e as Error, cat),
             },
           ],
           isError: true,
@@ -310,7 +403,7 @@ export function registerCalendarTools(server: McpServer): void {
           content: [
             {
               type: 'text' as const,
-              text: logError('calendar_delete_event', e as Error, ErrorCategory.GCAL),
+              text: logError('calendar_delete_event', e as Error, detectProvider(account) === 'google' ? ErrorCategory.GCAL : ErrorCategory.MS_CAL),
             },
           ],
           isError: true,
@@ -320,40 +413,108 @@ export function registerCalendarTools(server: McpServer): void {
   );
 
   // ===================================================================
-  // Update Event (Microsoft only — Google Calendar v3 requires full event)
+  // Update Event (Google Calendar + Outlook)
   // ===================================================================
 
   server.tool(
     'calendar_update_event',
-    'Update an existing Outlook calendar event.',
+    'Update an existing calendar event (Google Calendar or Outlook).',
     {
-      account: z.string().email().describe('Microsoft account email'),
+      account: z.string().email().describe('Account email'),
       eventId: z.string().describe('Event ID'),
-      subject: z.string().optional(),
-      start: z.string().optional(),
-      end: z.string().optional(),
-      timezone: z.string().optional(),
-      description: z.string().optional(),
-      location: z.string().optional(),
+      subject: z.string().optional().describe('New event title/subject'),
+      start: z.string().optional().describe('New start time (ISO 8601)'),
+      end: z.string().optional().describe('New end time (ISO 8601)'),
+      timezone: z.string().optional().describe('Timezone (e.g., UTC, America/New_York)'),
+      description: z.string().optional().describe('New event description/body'),
+      location: z.string().optional().describe('New event location'),
+      attendees: z.array(z.string().email()).optional().describe('Updated attendee emails (Google only)'),
+      calendarId: z.string().optional().describe('Calendar ID (default: primary, Google only)'),
     },
-    async ({ account, eventId, subject, start, end, timezone, description, location }) => {
+    async ({ account, eventId, subject, start, end, timezone, description, location, attendees, calendarId }) => {
       try {
-        const svc = await getMSCalendar(account);
-        const event = await svc.updateEvent(eventId, {
-          subject,
-          start,
-          end,
-          timezone,
-          body: description,
-          location,
-        });
-        return { content: [{ type: 'text' as const, text: JSON.stringify(event, null, 2) }] };
+        const provider = detectProvider(account);
+
+        if (provider === 'google') {
+          const svc = await getGoogleCalendar(account);
+          const event = await svc.updateEvent(calendarId ?? 'primary', eventId, {
+            summary: subject,
+            description,
+            location,
+            start,
+            end,
+            attendees,
+          });
+          return { content: [{ type: 'text' as const, text: JSON.stringify(event, null, 2) }] };
+        } else {
+          const svc = await getMSCalendar(account);
+          const event = await svc.updateEvent(eventId, {
+            subject,
+            start,
+            end,
+            timezone,
+            body: description,
+            location,
+          });
+          return { content: [{ type: 'text' as const, text: JSON.stringify(event, null, 2) }] };
+        }
       } catch (e) {
+        const cat = detectProvider(account) === 'google' ? ErrorCategory.GCAL : ErrorCategory.MS_CAL;
         return {
           content: [
             {
               type: 'text' as const,
-              text: logError('calendar_update_event', e as Error, ErrorCategory.MS_CAL),
+              text: logError('calendar_update_event', e as Error, cat),
+            },
+          ],
+          isError: true,
+        };
+      }
+    },
+  );
+
+  // ===================================================================
+  // Free/Busy Query
+  // ===================================================================
+
+  server.tool(
+    'calendar_free_busy',
+    'Check free/busy availability for calendars or people in a time range.',
+    {
+      account: z.string().email().describe('Email of the authenticated account'),
+      emails: z.array(z.string()).describe('Email addresses or calendar IDs to check availability for'),
+      start_time: z.string().describe('Start of time range (ISO 8601)'),
+      end_time: z.string().describe('End of time range (ISO 8601)'),
+      format: z.enum(['toon', 'json']).default('toon').describe('Output format'),
+    },
+    async ({ account, emails, start_time, end_time, format }) => {
+      try {
+        const provider = detectProvider(account);
+        let results;
+
+        if (provider === 'google') {
+          const svc = await getGoogleCalendar(account);
+          results = await svc.getFreeBusy(emails, start_time, end_time);
+        } else {
+          const svc = await getMSCalendar(account);
+          results = await svc.getFreeBusy(emails, start_time, end_time);
+        }
+
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: formatOutput(results, format, 'availability'),
+            },
+          ],
+        };
+      } catch (e) {
+        const cat = detectProvider(account) === 'google' ? ErrorCategory.GCAL : ErrorCategory.MS_CAL;
+        return {
+          content: [
+            {
+              type: 'text' as const,
+              text: logError('calendar_free_busy', e as Error, cat),
             },
           ],
           isError: true,

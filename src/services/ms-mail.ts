@@ -38,6 +38,29 @@ export interface MailFolder {
   unreadItemCount: number;
 }
 
+export interface OutlookCategory {
+  id: string;
+  displayName: string;
+  color: string;
+}
+
+export interface OutlookAttachment {
+  id: string;
+  name: string;
+  contentType: string;
+  size: number;
+  contentBytes?: string;
+}
+
+export interface AutoReplySettings {
+  status: string;
+  externalAudience: string;
+  internalReplyMessage: string;
+  externalReplyMessage: string;
+  scheduledStartDateTime?: string;
+  scheduledEndDateTime?: string;
+}
+
 // =====================================================================
 // Service Class
 // =====================================================================
@@ -94,6 +117,17 @@ export class MicrosoftMailService {
       headers: { Authorization: `Bearer ${this.token}` },
     });
     if (!res.ok) throw new Error(`Graph API ${res.status}: ${await res.text()}`);
+  }
+
+  private async patch(endpoint: string, body: unknown): Promise<Record<string, unknown>> {
+    const res = await fetch(`${GRAPH_BASE}${endpoint}`, {
+      method: 'PATCH',
+      headers: { Authorization: `Bearer ${this.token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) throw new Error(`Graph API ${res.status}: ${await res.text()}`);
+    const text = await res.text();
+    return text ? (JSON.parse(text) as Record<string, unknown>) : {};
   }
 
   // =================================================================
@@ -243,5 +277,135 @@ export class MicrosoftMailService {
   async deleteMessage(messageId: string): Promise<boolean> {
     await this.delete(`/me/messages/${messageId}`);
     return true;
+  }
+
+  // =================================================================
+  // Categories
+  // =================================================================
+
+  async listCategories(): Promise<OutlookCategory[]> {
+    const data = await this.get('/me/outlook/masterCategories');
+    const value = (data['value'] as Array<Record<string, unknown>>) ?? [];
+    return value.map((c) => ({
+      id: (c['id'] as string) ?? '',
+      displayName: (c['displayName'] as string) ?? '',
+      color: (c['color'] as string) ?? '',
+    }));
+  }
+
+  async setMessageCategories(messageId: string, categories: string[]): Promise<void> {
+    await this.patch(`/me/messages/${messageId}`, { categories });
+  }
+
+  // =================================================================
+  // Follow-up Flags
+  // =================================================================
+
+  async setMessageFlag(
+    messageId: string,
+    flagStatus: 'flagged' | 'complete' | 'notFlagged',
+    dueDate?: string,
+  ): Promise<void> {
+    const flag: Record<string, unknown> = { flagStatus };
+    if (flagStatus === 'flagged' && dueDate) {
+      flag['dueDateTime'] = { dateTime: dueDate, timeZone: 'UTC' };
+    }
+    await this.patch(`/me/messages/${messageId}`, { flag });
+  }
+
+  // =================================================================
+  // Batch Update
+  // =================================================================
+
+  async batchUpdate(
+    messageIds: string[],
+    updates: { isRead?: boolean; categories?: string[]; destinationId?: string },
+  ): Promise<{ updated: number }> {
+    let updated = 0;
+    for (const id of messageIds) {
+      if (updates.destinationId) {
+        await this.post(`/me/messages/${id}/move`, { destinationId: updates.destinationId });
+      } else {
+        const body: Record<string, unknown> = {};
+        if (updates.isRead !== undefined) body['isRead'] = updates.isRead;
+        if (updates.categories) body['categories'] = updates.categories;
+        await this.patch(`/me/messages/${id}`, body);
+      }
+      updated++;
+    }
+    return { updated };
+  }
+
+  // =================================================================
+  // Attachments
+  // =================================================================
+
+  async listAttachments(messageId: string): Promise<OutlookAttachment[]> {
+    const data = await this.get(`/me/messages/${messageId}/attachments`);
+    const value = (data['value'] as Array<Record<string, unknown>>) ?? [];
+    return value.map((a) => ({
+      id: (a['id'] as string) ?? '',
+      name: (a['name'] as string) ?? '',
+      contentType: (a['contentType'] as string) ?? '',
+      size: (a['size'] as number) ?? 0,
+    }));
+  }
+
+  async downloadAttachment(messageId: string, attachmentId: string): Promise<OutlookAttachment> {
+    const data = await this.get(`/me/messages/${messageId}/attachments/${attachmentId}`);
+    return {
+      id: (data['id'] as string) ?? '',
+      name: (data['name'] as string) ?? '',
+      contentType: (data['contentType'] as string) ?? '',
+      size: (data['size'] as number) ?? 0,
+      contentBytes: (data['contentBytes'] as string) ?? '',
+    };
+  }
+
+  // =================================================================
+  // Auto-Reply / Out-of-Office
+  // =================================================================
+
+  async getAutoReply(): Promise<AutoReplySettings> {
+    const data = await this.get('/me/mailboxSettings/automaticRepliesSetting');
+    return {
+      status: (data['status'] as string) ?? 'disabled',
+      externalAudience: (data['externalAudience'] as string) ?? 'none',
+      internalReplyMessage: (data['internalReplyMessage'] as string) ?? '',
+      externalReplyMessage: (data['externalReplyMessage'] as string) ?? '',
+      scheduledStartDateTime:
+        ((data['scheduledStartDateTime'] as Record<string, unknown>)?.['dateTime'] as string) ??
+        undefined,
+      scheduledEndDateTime:
+        ((data['scheduledEndDateTime'] as Record<string, unknown>)?.['dateTime'] as string) ??
+        undefined,
+    };
+  }
+
+  async setAutoReply(settings: {
+    status: 'disabled' | 'alwaysEnabled' | 'scheduled';
+    internalReplyMessage?: string;
+    externalReplyMessage?: string;
+    externalAudience?: string;
+    startDateTime?: string;
+    endDateTime?: string;
+  }): Promise<AutoReplySettings> {
+    const autoReply: Record<string, unknown> = { status: settings.status };
+    if (settings.internalReplyMessage)
+      autoReply['internalReplyMessage'] = settings.internalReplyMessage;
+    if (settings.externalReplyMessage)
+      autoReply['externalReplyMessage'] = settings.externalReplyMessage;
+    if (settings.externalAudience) autoReply['externalAudience'] = settings.externalAudience;
+    if (settings.status === 'scheduled') {
+      if (settings.startDateTime)
+        autoReply['scheduledStartDateTime'] = {
+          dateTime: settings.startDateTime,
+          timeZone: 'UTC',
+        };
+      if (settings.endDateTime)
+        autoReply['scheduledEndDateTime'] = { dateTime: settings.endDateTime, timeZone: 'UTC' };
+    }
+    await this.patch('/me/mailboxSettings', { automaticRepliesSetting: autoReply });
+    return this.getAutoReply();
   }
 }

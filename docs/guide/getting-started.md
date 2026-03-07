@@ -4,9 +4,9 @@ Get VibeMCP running in under 5 minutes.
 
 ## Prerequisites
 
-- **Node.js 18+** — [Download](https://nodejs.org/)
-- **Google OAuth credentials** (for Gmail/Calendar) — [Setup guide](#google-cloud-setup)
-- **Microsoft App Registration** (for Outlook/Calendar) — [Setup guide](#microsoft-azure-setup)
+- **Node.js 18+** - [Download](https://nodejs.org/)
+- **Google OAuth credentials** (for Gmail/Calendar) - [Setup guide](#google-cloud-setup)
+- **Microsoft App Registration** (for Outlook/Calendar) - [Setup guide](#microsoft-azure-setup)
 
 You only need one provider. Set up whichever you use.
 
@@ -86,7 +86,7 @@ Then use the built files in your MCP config:
 ```
 
 ::: tip Environment Variables
-Credentials can also be provided via a `.env` file in your working directory or in `~/.vibemcp/.env`. The MCP client `env` block is the easiest approach — no files to manage.
+Credentials can also be provided via a `.env` file in your working directory or in `~/.vibemcp/.env`. The MCP client `env` block is the easiest approach with no files to manage.
 :::
 
 ## Step 2: Restart Your AI Client
@@ -193,7 +193,7 @@ If your app is in "Testing" mode, only test users you've added can authenticate.
 5. Copy the **Application (client) ID** into your MCP config
 
 ::: tip No Redirect URI Needed
-Microsoft uses Device Code Flow — no redirect URI configuration needed. This is why it works perfectly in CLI environments.
+Microsoft uses Device Code Flow, so no redirect URI configuration is needed. This is why it works perfectly in CLI environments.
 :::
 
 ## Where VibeMCP Stores Data
@@ -229,7 +229,7 @@ The device code is valid for ~15 minutes. If it expires, run `add_microsoft_acco
 
 - Ensure "Allow public client flows" is enabled in Azure Portal > App Registration > Authentication
 - For personal accounts (hotmail/outlook/live), set Supported account types to include personal accounts
-- If you see `AADSTS70016`, the device code has expired — get a new one
+- If you see `AADSTS70016`, the device code has expired. Get a new one
 
 ### Token / Auth Issues
 

@@ -38,7 +38,7 @@ VibeMCP stores the following files locally on your machine:
 - Attachment data
 - Any data from API responses
 
-VibeMCP is a passthrough — it fetches data from APIs on demand and returns it to your MCP client (e.g., Claude Code). Nothing is cached or persisted beyond authentication tokens.
+VibeMCP is a passthrough. It fetches data from APIs on demand and returns it to your MCP client (e.g., Claude Code). Nothing is cached or persisted beyond authentication tokens.
 
 ## Data Transmission
 

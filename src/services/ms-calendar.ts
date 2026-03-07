@@ -190,6 +190,19 @@ export class MicrosoftCalendarService {
     attendees?: string[];
     isOnline?: boolean;
     calendarId?: string;
+    recurrence?: {
+      pattern: {
+        type: string;
+        interval: number;
+        daysOfWeek?: string[];
+      };
+      range: {
+        type: string;
+        startDate: string;
+        endDate?: string;
+        numberOfOccurrences?: number;
+      };
+    };
   }): Promise<MSCalendarEvent> {
     const tz = params.timezone ?? 'UTC';
     const eventBody: Record<string, unknown> = {
@@ -212,6 +225,9 @@ export class MicrosoftCalendarService {
     if (params.isOnline) {
       eventBody['isOnlineMeeting'] = true;
       eventBody['onlineMeetingProvider'] = 'teamsForBusiness';
+    }
+    if (params.recurrence) {
+      eventBody['recurrence'] = params.recurrence;
     }
 
     const endpoint = params.calendarId ? `/me/calendars/${params.calendarId}/events` : '/me/events';
@@ -259,5 +275,32 @@ export class MicrosoftCalendarService {
       availabilityViewInterval: 30,
     };
     return this.post('/me/calendar/getSchedule', body);
+  }
+
+  // =================================================================
+  // Free/Busy Query
+  // =================================================================
+
+  async getFreeBusy(
+    schedules: string[],
+    startTime: string,
+    endTime: string,
+  ): Promise<Array<{ scheduleId: string; busy: Array<{ start: string; end: string }> }>> {
+    const data = (await this.post('/me/calendar/getSchedule', {
+      schedules,
+      startTime: { dateTime: startTime, timeZone: 'UTC' },
+      endTime: { dateTime: endTime, timeZone: 'UTC' },
+      availabilityViewInterval: 30,
+    })) as { value: Array<Record<string, unknown>> };
+
+    return (data.value ?? []).map((s) => ({
+      scheduleId: (s.scheduleId as string) ?? '',
+      busy: ((s.scheduleItems as Array<Record<string, unknown>>) ?? [])
+        .filter((item) => (item.status as string) === 'busy')
+        .map((item) => ({
+          start: ((item.start as Record<string, unknown>)?.dateTime as string) ?? '',
+          end: ((item.end as Record<string, unknown>)?.dateTime as string) ?? '',
+        })),
+    }));
   }
 }

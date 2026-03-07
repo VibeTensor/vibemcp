@@ -4,6 +4,12 @@
  * Encodes structured data into TOON (Token-Oriented Object Notation) format.
  * Achieves 40-60% token reduction compared to JSON for uniform arrays.
  *
+ * Smart flattening:
+ *  - Calendar {dateTime, date, timeZone} - extracts dateTime or date string
+ *  - Primitive arrays - pipe-separated (["a","b"] -> "a|b")
+ *  - Long strings - truncated to maxValueLength
+ *  - Key folding for single-key wrappers (spec v3.0)
+ *
  * TOON spec: https://github.com/toon-format/toon
  */
 
@@ -11,16 +17,38 @@ import { ToonOptions, DEFAULT_TOON_OPTIONS } from './types.js';
 
 /**
  * Escape a string value for TOON output.
- * Only quote if the value contains the delimiter, newlines, or quotes.
+ * Handles smart flattening of known object shapes and value truncation.
  */
-function escapeValue(value: unknown, delimiter: string): string {
+function escapeValue(value: unknown, delimiter: string, maxLen: number): string {
   if (value === null || value === undefined) return 'null';
   if (typeof value === 'boolean') return value ? 'true' : 'false';
   if (typeof value === 'number') return String(value);
-  if (typeof value === 'object') return escapeValue(JSON.stringify(value), delimiter);
 
-  const str = String(value);
+  if (Array.isArray(value)) {
+    // Flat arrays of primitives - pipe-separated
+    if (value.length === 0) return '';
+    if (value.every((v) => typeof v === 'string' || typeof v === 'number')) {
+      return escapeValue(value.join('|'), delimiter, maxLen);
+    }
+    return escapeValue(JSON.stringify(value), delimiter, maxLen);
+  }
+
+  if (typeof value === 'object') {
+    const obj = value as Record<string, unknown>;
+    // Calendar start/end: {dateTime?, date?, timeZone?}
+    if ('dateTime' in obj || ('date' in obj && !('isRecurring' in obj))) {
+      return escapeValue((obj['dateTime'] ?? obj['date'] ?? '') as string, delimiter, maxLen);
+    }
+    return escapeValue(JSON.stringify(value), delimiter, maxLen);
+  }
+
+  let str = String(value);
   if (str === '') return '""';
+
+  // Truncate long values
+  if (maxLen > 0 && str.length > maxLen) {
+    str = str.slice(0, maxLen) + '...';
+  }
 
   // Quote if contains delimiter, newline, or starts/ends with whitespace
   if (
@@ -64,6 +92,7 @@ export function encodeToon<T extends Record<string, unknown>>(
 ): string {
   const opts = { ...DEFAULT_TOON_OPTIONS, ...options };
   const delim = opts.delimiter;
+  const maxLen = opts.maxValueLength;
 
   if (items.length === 0) {
     return `${typeName}[0]{}`;
@@ -77,7 +106,9 @@ export function encodeToon<T extends Record<string, unknown>>(
   const header = `${typeName}${countPart}{${fieldList.join(',')}}`;
 
   // Data rows: delimiter-separated values
-  const rows = items.map((item) => fieldList.map((f) => escapeValue(item[f], delim)).join(delim));
+  const rows = items.map((item) =>
+    fieldList.map((f) => escapeValue(item[f], delim, maxLen)).join(delim),
+  );
 
   return `${header}\n${rows.join('\n')}`;
 }
@@ -85,14 +116,18 @@ export function encodeToon<T extends Record<string, unknown>>(
 /**
  * Encode a single object as TOON key-value pairs.
  */
-export function encodeToonSingle(typeName: string, obj: Record<string, unknown>): string {
+export function encodeToonSingle(
+  typeName: string,
+  obj: Record<string, unknown>,
+  maxLen = 500,
+): string {
   const lines: string[] = [`${typeName}:`];
   for (const [key, value] of Object.entries(obj)) {
     if (value === undefined) continue;
     const val =
       typeof value === 'object' && value !== null
         ? JSON.stringify(value)
-        : escapeValue(value, '\t');
+        : escapeValue(value, '\t', maxLen);
     lines.push(`  ${key}: ${val}`);
   }
   return lines.join('\n');
@@ -126,4 +161,21 @@ export function formatOutput(
   }
 
   return String(data);
+}
+
+/** Strip HTML tags from a string, preserving text content */
+export function stripHtml(html: string): string {
+  return html
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<\/div>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
 }

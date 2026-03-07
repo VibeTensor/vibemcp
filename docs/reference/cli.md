@@ -90,7 +90,7 @@ The CLI loads environment variables in this order:
 | `GOOGLE_CLIENT_SECRET` | Google auth | OAuth 2.0 Client Secret |
 | `MICROSOFT_CLIENT_ID` | Microsoft auth | Azure App Registration Client ID |
 | `MICROSOFT_TENANT_ID` | Microsoft auth | Azure tenant (default: `common`) |
-| `VIBEMCP_CONFIG_DIR` | — | Override config directory (default: `~/.vibemcp/`) |
+| `VIBEMCP_CONFIG_DIR` | - | Override config directory (default: `~/.vibemcp/`) |
 
 ## Token Storage
 

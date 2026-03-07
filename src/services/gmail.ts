@@ -310,6 +310,185 @@ export class GmailService {
       size: att.data.size ?? 0,
     };
   }
+
+  // =================================================================
+  // Label Management
+  // =================================================================
+
+  async createLabel(
+    name: string,
+    labelListVisibility: string = 'labelShow',
+    messageListVisibility: string = 'show',
+  ): Promise<Label> {
+    const res = await this.gmail.users.labels.create({
+      userId: 'me',
+      requestBody: { name, labelListVisibility, messageListVisibility },
+    });
+    return {
+      id: res.data.id ?? '',
+      name: res.data.name ?? '',
+      type: res.data.type ?? '',
+    };
+  }
+
+  async updateLabel(
+    labelId: string,
+    name?: string,
+    labelListVisibility?: string,
+    messageListVisibility?: string,
+  ): Promise<Label> {
+    const requestBody: Record<string, string> = {};
+    if (name) requestBody.name = name;
+    if (labelListVisibility) requestBody.labelListVisibility = labelListVisibility;
+    if (messageListVisibility) requestBody.messageListVisibility = messageListVisibility;
+
+    const res = await this.gmail.users.labels.update({
+      userId: 'me',
+      id: labelId,
+      requestBody,
+    });
+    return {
+      id: res.data.id ?? '',
+      name: res.data.name ?? '',
+      type: res.data.type ?? '',
+    };
+  }
+
+  async deleteLabel(labelId: string): Promise<void> {
+    await this.gmail.users.labels.delete({ userId: 'me', id: labelId });
+  }
+
+  async modifyLabels(
+    messageIds: string[],
+    addLabelIds: string[] = [],
+    removeLabelIds: string[] = [],
+  ): Promise<void> {
+    for (const messageId of messageIds) {
+      await this.gmail.users.messages.modify({
+        userId: 'me',
+        id: messageId,
+        requestBody: { addLabelIds, removeLabelIds },
+      });
+    }
+  }
+
+  // =================================================================
+  // Batch Operations
+  // =================================================================
+
+  async batchModify(
+    messageIds: string[],
+    addLabelIds: string[] = [],
+    removeLabelIds: string[] = [],
+  ): Promise<{ modified: number }> {
+    await this.gmail.users.messages.batchModify({
+      userId: 'me',
+      requestBody: { ids: messageIds, addLabelIds, removeLabelIds },
+    });
+    return { modified: messageIds.length };
+  }
+
+  // =================================================================
+  // Attachment Download
+  // =================================================================
+
+  async downloadAttachment(
+    messageId: string,
+    attachmentId: string,
+  ): Promise<{ filename: string; mimeType: string; size: number; data: string }> {
+    const att = await this.gmail.users.messages.attachments.get({
+      userId: 'me',
+      messageId,
+      id: attachmentId,
+    });
+
+    // Get the message to find filename and mimeType from parts
+    const msg = await this.gmail.users.messages.get({
+      userId: 'me',
+      id: messageId,
+      format: 'full',
+    });
+
+    let filename = 'attachment';
+    let mimeType = 'application/octet-stream';
+
+    const findAttachment = (parts: gmail_v1.Schema$MessagePart[]): void => {
+      for (const part of parts) {
+        if (part.body?.attachmentId === attachmentId) {
+          filename = part.filename ?? 'attachment';
+          mimeType = part.mimeType ?? 'application/octet-stream';
+          return;
+        }
+        if (part.parts) {
+          findAttachment(part.parts);
+        }
+      }
+    };
+
+    if (msg.data.payload?.parts) {
+      findAttachment(msg.data.payload.parts);
+    }
+
+    return {
+      filename,
+      mimeType,
+      size: att.data.size ?? 0,
+      data: att.data.data ?? '',
+    };
+  }
+
+  // =================================================================
+  // Vacation / Out-of-Office Settings
+  // =================================================================
+
+  async getVacation(): Promise<{
+    enableAutoReply: boolean;
+    responseSubject: string;
+    responseBodyPlainText: string;
+    startTime?: string;
+    endTime?: string;
+  }> {
+    const res = await this.gmail.users.settings.getVacation({ userId: 'me' });
+    return {
+      enableAutoReply: res.data.enableAutoReply ?? false,
+      responseSubject: res.data.responseSubject ?? '',
+      responseBodyPlainText: res.data.responseBodyPlainText ?? '',
+      startTime: res.data.startTime
+        ? new Date(Number(res.data.startTime)).toISOString()
+        : undefined,
+      endTime: res.data.endTime
+        ? new Date(Number(res.data.endTime)).toISOString()
+        : undefined,
+    };
+  }
+
+  async setVacation(settings: {
+    enableAutoReply: boolean;
+    responseSubject?: string;
+    responseBodyPlainText?: string;
+    startTime?: string;
+    endTime?: string;
+  }): Promise<{ enableAutoReply: boolean; responseSubject: string }> {
+    const requestBody: Record<string, unknown> = {
+      enableAutoReply: settings.enableAutoReply,
+    };
+    if (settings.responseSubject) requestBody.responseSubject = settings.responseSubject;
+    if (settings.responseBodyPlainText)
+      requestBody.responseBodyPlainText = settings.responseBodyPlainText;
+    if (settings.startTime)
+      requestBody.startTime = String(new Date(settings.startTime).getTime());
+    if (settings.endTime)
+      requestBody.endTime = String(new Date(settings.endTime).getTime());
+
+    const res = await this.gmail.users.settings.updateVacation({
+      userId: 'me',
+      requestBody,
+    });
+    return {
+      enableAutoReply: res.data.enableAutoReply ?? false,
+      responseSubject: res.data.responseSubject ?? '',
+    };
+  }
 }
 
 // =====================================================================

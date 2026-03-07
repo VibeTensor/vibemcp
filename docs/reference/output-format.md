@@ -15,9 +15,9 @@ def456	Q4 Report	jane@example.com	2025-12-17	Please review the attached
 ```
 
 **Header components:**
-- `messages` -- type name (describes the data)
-- `[10]` -- row count (lets the LLM verify all rows were received)
-- `{id,subject,from,date,snippet}` -- column names in order
+- `messages` - type name (describes the data)
+- `[10]` - row count (lets the LLM verify all rows were received)
+- `{id,subject,from,date,snippet}` - column names in order
 
 **Row format:**
 - Tab-delimited values
@@ -83,10 +83,10 @@ Values are automatically quoted when they contain:
 ### Escape Sequences
 
 Per TOON v3.0 spec:
-- `\\` -- literal backslash
-- `\"` -- literal quote (inside quoted values)
-- `\n` -- newline
-- `\r` -- carriage return
+- `\\` - literal backslash
+- `\"` - literal quote (inside quoted values)
+- `\n` - newline
+- `\r` - carriage return
 
 ### Count Validation
 

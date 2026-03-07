@@ -6,7 +6,7 @@ VibeMCP needs OAuth credentials to access Gmail and Microsoft APIs. There are th
 
 ### Option 1: MCP Client Config (Recommended)
 
-Pass credentials directly in your MCP client configuration. This is the simplest — no files to manage.
+Pass credentials directly in your MCP client configuration. This is the simplest option with no files to manage.
 
 ```json
 {
@@ -46,9 +46,9 @@ Place a `.env` file at `~/.vibemcp/.env`. This is loaded automatically when no `
 ### Loading Order
 
 VibeMCP checks for `.env` in this order:
-1. **Current working directory** — `$PWD/.env`
-2. **Config directory** — `~/.vibemcp/.env`
-3. **Pre-set environment variables** — from MCP client `env` block
+1. **Current working directory** - `$PWD/.env`
+2. **Config directory** - `~/.vibemcp/.env`
+3. **Pre-set environment variables** - from MCP client `env` block
 
 MCP client `env` block variables are always available regardless of `.env` file loading.
 
@@ -56,10 +56,10 @@ MCP client `env` block variables are always available regardless of `.env` file 
 
 | Variable | Required | Default | Description |
 |:---------|:---------|:--------|:------------|
-| `GOOGLE_CLIENT_ID` | For Gmail/Calendar | — | Google OAuth 2.0 Client ID |
-| `GOOGLE_CLIENT_SECRET` | For Gmail/Calendar | — | Google OAuth 2.0 Client Secret |
+| `GOOGLE_CLIENT_ID` | For Gmail/Calendar | - | Google OAuth 2.0 Client ID |
+| `GOOGLE_CLIENT_SECRET` | For Gmail/Calendar | - | Google OAuth 2.0 Client Secret |
 | `GOOGLE_OAUTH_PORT` | No | `4100` | Port for Google OAuth callback server |
-| `MICROSOFT_CLIENT_ID` | For Outlook/Calendar | — | Azure App Registration Client ID |
+| `MICROSOFT_CLIENT_ID` | For Outlook/Calendar | - | Azure App Registration Client ID |
 | `MICROSOFT_TENANT_ID` | No | `common` | Azure tenant ID |
 | `VIBEMCP_OUTPUT_FORMAT` | No | `toon` | Default output format: `toon` or `json` |
 | `VIBEMCP_CONFIG_DIR` | No | `~/.vibemcp/` | Override config directory location |
@@ -69,7 +69,7 @@ MCP client `env` block variables are always available regardless of `.env` file 
 1. Go to [Google Cloud Console > Credentials](https://console.cloud.google.com/apis/credentials)
 2. Create a new **OAuth 2.0 Client ID** (Application type: **Desktop**)
 3. Add `http://localhost:4100/code` as an authorized redirect URI
-4. Enable the **Gmail API** and **Google Calendar API** in [API Library](https://console.cloud.google.com/apis/library)
+4. Enable the **Gmail API**, **Google Calendar API**, and **People API** in [API Library](https://console.cloud.google.com/apis/library)
 5. Copy the Client ID and Client Secret
 
 ### Google Scopes
@@ -80,8 +80,13 @@ VibeMCP requests these scopes during OAuth:
 |:------|:--------|
 | `openid` | OpenID Connect identity |
 | `userinfo.email` | User email address |
-| `https://mail.google.com/` | Full Gmail access |
-| `https://www.googleapis.com/auth/calendar` | Calendar read/write |
+| `gmail.readonly` | Read emails and threads |
+| `gmail.modify` | Modify labels, archive, trash |
+| `gmail.send` | Send emails |
+| `gmail.compose` | Create and edit drafts |
+| `gmail.settings.basic` | Manage filters and vacation settings |
+| `calendar` | Calendar read/write |
+| `contacts.readonly` | Read contacts (People API) |
 
 ## Microsoft Azure Setup
 
@@ -105,6 +110,8 @@ VibeMCP uses the Device Code flow for Microsoft, which doesn't require a redirec
 | `Mail.Send` | Send emails |
 | `Calendars.ReadWrite` | Calendar access |
 | `User.Read` | User profile |
+| `Contacts.Read` | Read contacts |
+| `People.Read` | People search and resolution |
 
 **Business accounts only (additional):**
 

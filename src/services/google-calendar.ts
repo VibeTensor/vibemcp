@@ -32,6 +32,16 @@ export interface CalendarEvent {
   hangoutLink: string;
 }
 
+export interface FreeBusySlot {
+  start: string;
+  end: string;
+}
+
+export interface FreeBusyResult {
+  calendar: string;
+  busy: FreeBusySlot[];
+}
+
 // =====================================================================
 // Service Class
 // =====================================================================
@@ -100,15 +110,23 @@ export class GoogleCalendarService {
     location?: string;
     attendees?: string[];
     calendarId?: string;
+    recurrence?: string[];
   }): Promise<CalendarEvent> {
     const event: calendar_v3.Schema$Event = {
       summary: params.summary,
-      start: { dateTime: params.start },
-      end: { dateTime: params.end },
+      start: params.start.includes('T')
+        ? { dateTime: params.start }
+        : { date: params.start },
+      end: params.end.includes('T')
+        ? { dateTime: params.end }
+        : { date: params.end },
       description: params.description,
       location: params.location,
       attendees: params.attendees?.map((email) => ({ email })),
     };
+    if (params.recurrence?.length) {
+      event.recurrence = params.recurrence;
+    }
 
     const result = await this.calendar.events.insert({
       calendarId: params.calendarId ?? 'primary',
@@ -125,5 +143,77 @@ export class GoogleCalendarService {
       sendUpdates: 'all',
     });
     return true;
+  }
+
+  // ===================================================================
+  // Update Event
+  // ===================================================================
+
+  async updateEvent(
+    calendarId: string,
+    eventId: string,
+    updates: {
+      summary?: string;
+      description?: string;
+      location?: string;
+      start?: string;
+      end?: string;
+      attendees?: string[];
+    },
+  ): Promise<CalendarEvent> {
+    const requestBody: Record<string, unknown> = {};
+    if (updates.summary) requestBody.summary = updates.summary;
+    if (updates.description) requestBody.description = updates.description;
+    if (updates.location) requestBody.location = updates.location;
+    if (updates.start) {
+      requestBody.start = updates.start.includes('T')
+        ? { dateTime: updates.start }
+        : { date: updates.start };
+    }
+    if (updates.end) {
+      requestBody.end = updates.end.includes('T')
+        ? { dateTime: updates.end }
+        : { date: updates.end };
+    }
+    if (updates.attendees) {
+      requestBody.attendees = updates.attendees.map((email) => ({ email }));
+    }
+
+    const res = await this.calendar.events.patch({
+      calendarId,
+      eventId,
+      requestBody,
+      sendUpdates: 'all',
+    });
+    return this.formatEvent(res.data);
+  }
+
+  // ===================================================================
+  // Free/Busy Query
+  // ===================================================================
+
+  async getFreeBusy(
+    calendarIds: string[],
+    timeMin: string,
+    timeMax: string,
+  ): Promise<FreeBusyResult[]> {
+    const res = await this.calendar.freebusy.query({
+      requestBody: {
+        timeMin,
+        timeMax,
+        items: calendarIds.map((id) => ({ id })),
+      },
+    });
+
+    const calendars = res.data.calendars ?? {};
+    return Object.entries(calendars).map(([id, cal]) => ({
+      calendar: id,
+      busy: (
+        (cal as Record<string, unknown>).busy as Array<{ start: string; end: string }> ?? []
+      ).map((slot) => ({
+        start: slot.start ?? '',
+        end: slot.end ?? '',
+      })),
+    }));
   }
 }

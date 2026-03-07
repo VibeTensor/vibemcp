@@ -18,8 +18,11 @@ flowchart LR
         M3 --> M4["complete_microsoft_auth\nTokens stored"]
     end
 
-    style Google fill:#f0fdf4,stroke:#22c55e
-    style Microsoft fill:#eff6ff,stroke:#3b82f6
+    classDef googleStyle fill:#f0fdf4,stroke:#22c55e,color:#14532d
+    classDef msStyle fill:#eff6ff,stroke:#3b82f6,color:#1e3a8a
+
+    class Google googleStyle
+    class Microsoft msStyle
 ```
 
 ## Gmail
@@ -53,7 +56,7 @@ Fields are extracted from Gmail message headers (`Subject`, `From`, `Date`) and 
 
 **API:** [Microsoft Graph](https://learn.microsoft.com/en-us/graph/api/resources/mail-api-overview) via native `fetch`
 
-**Auth:** Device Code Flow via `@azure/msal-node`. No browser redirect needed — ideal for CLI environments.
+**Auth:** Device Code Flow via `@azure/msal-node`. No browser redirect needed, making it ideal for CLI environments.
 
 **Tools:**
 
@@ -129,13 +132,17 @@ flowchart TD
     FLAT --> HDR
     HDR --> ROWS
 
-    style API fill:#fef3c7,stroke:#f59e0b
-    style Service fill:#f0f9ff,stroke:#0ea5e9
-    style Encode fill:#f0fdf4,stroke:#22c55e
+    classDef apiStyle fill:#fef3c7,stroke:#f59e0b,color:#92400e
+    classDef svcStyle fill:#f0f9ff,stroke:#0ea5e9,color:#0c4a6e
+    classDef encStyle fill:#f0fdf4,stroke:#22c55e,color:#14532d
+
+    class API apiStyle
+    class Service svcStyle
+    class Encode encStyle
 ```
 
 ## Privacy
 
-VibeMCP is a passthrough — it fetches from APIs on demand and stores nothing beyond OAuth tokens. Token files are local JSON in `~/.vibemcp/`. No telemetry, no hosted services, no data retention.
+VibeMCP is a passthrough. It fetches from APIs on demand and stores nothing beyond OAuth tokens. Token files are local JSON in `~/.vibemcp/`. No telemetry, no hosted services, no data retention.
 
 See [Privacy Policy](https://github.com/VibeTensor/vibemcp/blob/main/PRIVACY.md) and [Security Policy](https://github.com/VibeTensor/vibemcp/blob/main/SECURITY.md).

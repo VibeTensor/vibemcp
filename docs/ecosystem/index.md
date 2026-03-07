@@ -9,9 +9,10 @@ flowchart TD
     subgraph MCP["MCP Server (stdio)"]
         IDX["index.ts\nServer Entry"]
         ADM["tools/admin.ts\nAccount Management (7)"]
-        GM["tools/gmail.ts\nGmail Tools (8)"]
-        OL["tools/outlook.ts\nOutlook Tools (8)"]
-        CAL["tools/calendar.ts\nCalendar Tools (5)"]
+        GM["tools/gmail.ts\nGmail Tools (16)"]
+        OL["tools/outlook.ts\nOutlook Tools (16)"]
+        CAL["tools/calendar.ts\nCalendar Tools (6)"]
+        CON["tools/contacts.ts\nContacts Tools (3)"]
         UNI["tools/unified.ts\nCross-Account (3)"]
     end
 
@@ -32,23 +33,31 @@ flowchart TD
         MS["services/ms-mail.ts\nGraph API (fetch)"]
         GC["services/google-calendar.ts\ngoogleapis"]
         MC["services/ms-calendar.ts\nGraph API (fetch)"]
+        GPC["services/google-contacts.ts\nPeople API"]
+        MSC["services/ms-contacts.ts\nGraph API (fetch)"]
         CACHE["services/cache.ts\n10-min TTL"]
     end
 
-    IDX --> ADM & GM & OL & CAL & UNI
+    IDX --> ADM & GM & OL & CAL & CON & UNI
     ADM --> CFG & GA & MA
     GM --> GS & TOON
     OL --> MS & TOON
     CAL --> GC & MC & TOON
+    CON --> GPC & MSC & TOON
     UNI --> GS & MS & GC & MC & TOON
-    GS & MS & GC & MC --> CACHE
+    GS & MS & GC & MC & GPC & MSC --> CACHE
     GA --> TS
     MA --> TS
 
-    style MCP fill:#f0f9ff,stroke:#0ea5e9
-    style Core fill:#f0fdf4,stroke:#22c55e
-    style Auth fill:#fefce8,stroke:#eab308
-    style Services fill:#faf5ff,stroke:#a855f7
+    classDef mcpStyle fill:#f0f9ff,stroke:#0ea5e9,color:#0c4a6e
+    classDef coreStyle fill:#f0fdf4,stroke:#22c55e,color:#14532d
+    classDef authStyle fill:#fefce8,stroke:#eab308,color:#713f12
+    classDef svcStyle fill:#faf5ff,stroke:#a855f7,color:#581c87
+
+    class MCP mcpStyle
+    class Core coreStyle
+    class Auth authStyle
+    class Services svcStyle
 ```
 
 ## Source Structure
@@ -67,12 +76,15 @@ src/
 │   ├── ms-mail.ts          # Microsoft Graph Mail (native fetch)
 │   ├── google-calendar.ts  # Google Calendar API service
 │   ├── ms-calendar.ts      # Microsoft Graph Calendar (native fetch)
+│   ├── google-contacts.ts  # Google People API (contacts)
+│   ├── ms-contacts.ts      # Microsoft Graph Contacts (native fetch)
 │   └── cache.ts            # Service instance cache (10-min TTL)
 ├── tools/
 │   ├── admin.ts            # Account management tools (7)
-│   ├── gmail.ts            # Gmail tool handlers (8)
-│   ├── outlook.ts          # Outlook tool handlers (8)
-│   ├── calendar.ts         # Unified calendar tools (5)
+│   ├── gmail.ts            # Gmail tool handlers (16)
+│   ├── outlook.ts          # Outlook tool handlers (16)
+│   ├── calendar.ts         # Unified calendar tools (6)
+│   ├── contacts.ts         # Contact tools (3)
 │   └── unified.ts          # Cross-account aggregation (3)
 ├── toon/
 │   ├── encoder.ts          # TOON serialization
@@ -86,7 +98,7 @@ src/
 
 ### stderr-safe Logging
 
-`console.log` is redirected to `console.error` at import time. MCP uses stdout for JSON-RPC communication — any stray `console.log` would corrupt the protocol stream.
+`console.log` is redirected to `console.error` at import time. MCP uses stdout for JSON-RPC communication, so any stray `console.log` would corrupt the protocol stream.
 
 ### Static Factory Pattern
 
@@ -129,7 +141,7 @@ sequenceDiagram
 
 ## Roadmap
 
-### v0.1.x — Current (Stable)
+### v0.1.x (Foundation)
 
 - 31 MCP tools (admin, gmail, outlook, calendar, unified)
 - TOON output with 51% average token savings
@@ -138,21 +150,28 @@ sequenceDiagram
 - CLI for authentication and account management
 - Test suite, ESLint, Prettier, Docker support
 
-### v0.2 — Polish
+### v0.2 (Polish, Current)
 
-- Attachment handling (upload / download)
-- Google Calendar event update
-- Gmail label management
-- Expanded test coverage
+- 51 MCP tools across 7 modules
+- Attachment download for Gmail and Outlook
+- Google Calendar event update (was Microsoft only)
+- Gmail label management (create, update, delete, apply to messages)
+- Email batch operations (Gmail and Outlook)
+- Outlook categories and follow-up flags
+- Out-of-office / auto-reply (Gmail vacation, Outlook auto-reply)
+- Contact name resolution via Google People API and Microsoft Graph
+- Calendar free/busy lookup
+- Recurring event support (RRULE patterns)
+- 149 tests across 8 suites
 
-### v0.3 — Expand
+### v0.3 (Expand)
 
 - Slack integration
 - Todoist integration
 - Semantic caching layer
 - Rate limiting
 
-### v1.0 — Production
+### v1.0 (Production)
 
 - Hosted OAuth (no user GCP / Azure setup needed)
 - Teams chat integration
@@ -171,6 +190,6 @@ We welcome contributions! See [CONTRIBUTING.md](https://github.com/VibeTensor/vi
 
 ## License
 
-[PolyForm Noncommercial 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/) — [VibeTensor Private Limited](https://vibetensor.com)
+[PolyForm Noncommercial 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0/) - [VibeTensor Private Limited](https://vibetensor.com)
 
 Free for personal use, research, education, hobby projects, and noncommercial organizations. Commercial use requires a separate license from VibeTensor.

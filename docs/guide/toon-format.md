@@ -16,9 +16,9 @@ msg003	Lunch?	bob@example.com	2025-12-16	Are you free Thursday
 ```
 
 **Header:** `typeName[count]{field1,field2,...}` declares the schema once.
-- `messages` —type label
-- `[3]` —row count (enables LLM to verify completeness)
-- `{id,subject,from,date,snippet}` —column names in order
+- `messages` - type label
+- `[3]` - row count (enables LLM to verify completeness)
+- `{id,subject,from,date,snippet}` - column names in order
 
 **Rows:** Tab-delimited values. One row per object. No repeated keys, no brackets, no quotes.
 
@@ -40,10 +40,10 @@ message:
 
 ## Why TOON Beats JSON for LLMs
 
-1. **No repeated keys** —JSON repeats field names for every item. TOON declares fields once.
-2. **No syntax noise** —No `{`, `}`, `[`, `]`, `"`, `,` characters consuming tokens.
-3. **Self-describing schema** —The `[count]{fields}` header tells the LLM what to expect.
-4. **JSON fallback** —Every tool accepts `format: "json"` for debugging.
+1. **No repeated keys** - JSON repeats field names for every item. TOON declares fields once.
+2. **No syntax noise** - No `{`, `}`, `[`, `]`, `"`, `,` characters consuming tokens.
+3. **Self-describing schema** - The `[count]{fields}` header tells the LLM what to expect.
+4. **JSON fallback** - Every tool accepts `format: "json"` for debugging.
 
 ## Source-Level Encoding
 
@@ -59,16 +59,18 @@ flowchart LR
 
     API --> FS --> FL --> TE --> OUT
 
-    style API fill:#fef3c7,stroke:#f59e0b
-    style FS fill:#f0f9ff,stroke:#0ea5e9
-    style FL fill:#f0f9ff,stroke:#0ea5e9
-    style TE fill:#f0fdf4,stroke:#22c55e
-    style OUT fill:#f0fdf4,stroke:#22c55e
+    classDef apiNode fill:#fef3c7,stroke:#f59e0b,color:#92400e
+    classDef processNode fill:#f0f9ff,stroke:#0ea5e9,color:#0c4a6e
+    classDef outputNode fill:#f0fdf4,stroke:#22c55e,color:#14532d
+
+    class API apiNode
+    class FS,FL processNode
+    class TE,OUT outputNode
 ```
 
-1. **Field selection** — Each data type uses a curated set of fields, not the full API response
-2. **Flattening** — Nested API objects are transformed to flat primitives before encoding
-3. **Type-aware** — Calendar events, emails, and folders each get optimal field layouts
+1. **Field selection** - Each data type uses a curated set of fields, not the full API response
+2. **Flattening** - Nested API objects are transformed to flat primitives before encoding
+3. **Type-aware** - Calendar events, emails, and folders each get optimal field layouts
 
 ### Field Selection Per Data Type
 
@@ -90,9 +92,11 @@ API responses from Google and Microsoft contain deeply nested structures. VibeMC
 - `organizer.email` -> `organizer` (flat string)
 - Result: 70% token savings
 
-**Outlook / Microsoft Graph** (partial flattening):
+**Outlook / Microsoft Graph** (smart flattening):
 - `from.emailAddress.address` -> `from` (flat string)
-- `start` -> `{ dateTime, timeZone }` (still nested, serialized as inline JSON)
+- `start.dateTime` -> `start` (auto-extracts dateTime from `{dateTime, timeZone}` objects)
+- Primitive arrays -> pipe-separated (`["INBOX","UNREAD"]` -> `INBOX|UNREAD`)
+- Long values -> truncated to 500 chars with `...` suffix
 - Result: 41% token savings
 
 ## Why Savings Vary
@@ -103,7 +107,7 @@ API responses from Google and Microsoft contain deeply nested structures. VibeMC
 
 ## Schema Evolution
 
-TOON headers are self-describing. Each response declares its own schema. If a new field is added, the header simply includes it. The LLM reads the header and knows what columns to expect —no version negotiation needed.
+TOON headers are self-describing. Each response declares its own schema. If a new field is added, the header simply includes it. The LLM reads the header and knows what columns to expect, so no version negotiation is needed.
 
 ## TOON v3.0 Spec Compatibility
 
@@ -114,9 +118,13 @@ TOON headers are self-describing. Each response declares its own schema. If a ne
 | Tab delimiter | Yes (default) | Safe for natural language |
 | Comma/pipe delimiter | Configurable | Via `ToonOptions` |
 | Nested objects (indentation) | No | Service layer flattens instead |
+| Calendar object flattening | Yes | `{dateTime, timeZone}` auto-extracted |
+| Primitive array flattening | Yes | `["a","b"]` -> `a\|b` |
+| Value truncation | Yes | Default 500 chars, configurable |
 | Quoted strings | Yes | Auto-applied when needed |
 | Escape sequences | Yes | Per TOON v3.0 spec |
 | Count validation `[N]` | Yes | Always included |
+| HTML stripping | Yes | `stripHtml()` utility for email bodies |
 
 ## VibeMCP's Approach vs Generic TOON Converters
 
@@ -133,12 +141,13 @@ The key insight: most token waste comes from **repeated keys** and **unnecessary
 
 ## Future Directions
 
-Based on analysis of the TOON v3.0 spec and ecosystem:
+Based on analysis of the TOON v3.0 spec, ecosystem, and competing approaches (TRON, Cloudflare Code Mode, Speakeasy Dynamic Toolsets):
 
-- **Streaming TOON**: Progressive row-by-row delivery for large datasets (pagination, bulk operations)
-- **Schema registry**: Pre-defined TOON schemas per tool, enabling client-side validation
+- **Key folding**: Adopt spec v3.0 dotted path notation for single-key wrappers (e.g., `start.dateTime`)
+- **Dynamic field selection**: Expose a `fields` parameter on list tools so LLMs request only needed columns
+- **Streaming TOON**: Progressive row-by-row delivery for large datasets using `encodeLines()` pattern
+- **Tool presets**: Load only email or calendar tool schemas to reduce input token overhead
 - **Native MCP support**: Contribute to MCP spec for `encoding: toon` capability negotiation
-- **Domain-specific schemas**: Healthcare (FHIR) and Web3 (blockchain logs) TOON presets
 
 ## Further Reading
 

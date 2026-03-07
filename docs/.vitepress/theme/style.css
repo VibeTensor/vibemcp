@@ -58,7 +58,7 @@
   }
 }
 
-/* Feature Cards — Enhanced styling */
+/* Feature Cards - Enhanced styling */
 .VPFeature {
   border-radius: 12px !important;
   transition: transform 0.2s ease, box-shadow 0.2s ease !important;
@@ -73,23 +73,23 @@
   box-shadow: 0 8px 24px rgba(56, 189, 248, 0.08) !important;
 }
 
-/* Feature icons — larger and colored */
+/* Feature icons - larger and colored */
 .VPFeature .VPFeatureIcon {
   font-size: 28px;
 }
 
-/* Hero tagline — more breathing room */
+/* Hero tagline - more breathing room */
 .VPHero .tagline {
   max-width: 560px !important;
   line-height: 1.6 !important;
 }
 
-/* Code blocks — slightly improved */
+/* Code blocks - slightly improved */
 .vp-doc div[class*='language-'] {
   border-radius: 8px;
 }
 
-/* Tables — cleaner look */
+/* Tables - cleaner look */
 .vp-doc table {
   border-radius: 8px;
   overflow: hidden;
@@ -100,29 +100,161 @@
   font-weight: 600;
 }
 
-/* Mermaid diagrams — centered with proper spacing */
+/* Mermaid diagrams - centered with proper spacing */
 .mermaid {
   display: flex;
   justify-content: center;
   margin: 24px 0;
 }
 
-/* Custom container (tip, warning, etc) — rounder */
+/* Mermaid light mode - high contrast nodes */
+.mermaid .node rect,
+.mermaid .node circle,
+.mermaid .node polygon {
+  fill: #f0f9ff !important;
+  stroke: #0ea5e9 !important;
+  stroke-width: 1.5px !important;
+}
+
+.mermaid .node .label,
+.mermaid .nodeLabel,
+.mermaid .label text,
+.mermaid .node foreignObject div {
+  color: #1e293b !important;
+  fill: #1e293b !important;
+}
+
+.mermaid .cluster rect {
+  fill: #f8fafc !important;
+  stroke: #94a3b8 !important;
+  stroke-width: 1px !important;
+}
+
+.mermaid .cluster .nodeLabel,
+.mermaid .cluster-label .nodeLabel {
+  color: #475569 !important;
+  fill: #475569 !important;
+}
+
+.mermaid .edgePath .path {
+  stroke: #64748b !important;
+  stroke-width: 1.5px !important;
+}
+
+.mermaid .edgeLabel {
+  background-color: #fff !important;
+  color: #475569 !important;
+}
+
+.mermaid marker path {
+  fill: #64748b !important;
+}
+
+/* Mermaid dark mode - proper contrast */
+.dark .mermaid .node rect,
+.dark .mermaid .node circle,
+.dark .mermaid .node polygon {
+  fill: #1e3a5f !important;
+  stroke: #38bdf8 !important;
+  stroke-width: 1.5px !important;
+}
+
+.dark .mermaid .node .label,
+.dark .mermaid .nodeLabel,
+.dark .mermaid .label text,
+.dark .mermaid .node foreignObject div {
+  color: #e2e8f0 !important;
+  fill: #e2e8f0 !important;
+}
+
+.dark .mermaid .cluster rect {
+  fill: #0f172a !important;
+  stroke: #475569 !important;
+  stroke-width: 1px !important;
+}
+
+.dark .mermaid .cluster .nodeLabel,
+.dark .mermaid .cluster-label .nodeLabel {
+  color: #94a3b8 !important;
+  fill: #94a3b8 !important;
+}
+
+.dark .mermaid .edgePath .path {
+  stroke: #94a3b8 !important;
+  stroke-width: 1.5px !important;
+}
+
+.dark .mermaid .edgeLabel {
+  background-color: #1e293b !important;
+  color: #cbd5e1 !important;
+}
+
+.dark .mermaid marker path {
+  fill: #94a3b8 !important;
+}
+
+/* Sequence diagram - dark mode fixes */
+.dark .mermaid .actor {
+  fill: #1e3a5f !important;
+  stroke: #38bdf8 !important;
+}
+
+.dark .mermaid .actor text,
+.dark .mermaid text.actor {
+  fill: #e2e8f0 !important;
+}
+
+.dark .mermaid .activation0,
+.dark .mermaid .activation1,
+.dark .mermaid .activation2 {
+  fill: #1e3a5f !important;
+  stroke: #38bdf8 !important;
+}
+
+.dark .mermaid .messageLine0,
+.dark .mermaid .messageLine1 {
+  stroke: #94a3b8 !important;
+}
+
+.dark .mermaid .messageText {
+  fill: #e2e8f0 !important;
+}
+
+.dark .mermaid .loopText,
+.dark .mermaid .loopText > tspan {
+  fill: #cbd5e1 !important;
+}
+
+.dark .mermaid .loopLine {
+  stroke: #475569 !important;
+}
+
+.dark .mermaid .labelBox {
+  fill: #1e293b !important;
+  stroke: #475569 !important;
+}
+
+.dark .mermaid .labelText,
+.dark .mermaid .labelText > tspan {
+  fill: #cbd5e1 !important;
+}
+
+/* Custom container (tip, warning, etc) - rounder */
 .vp-doc .custom-block {
   border-radius: 8px;
 }
 
-/* Sidebar — active item accent */
+/* Sidebar - active item accent */
 .VPSidebarItem.is-active > .item > .indicator {
   background-color: var(--vp-c-brand-1) !important;
 }
 
-/* Footer — subtle top border */
+/* Footer - subtle top border */
 .VPFooter {
   border-top: 1px solid var(--vp-c-divider);
 }
 
-/* Home page custom content — improved spacing */
+/* Home page custom content - improved spacing */
 .vp-doc h2 {
   border-top: none;
   padding-top: 24px;

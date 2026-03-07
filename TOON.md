@@ -8,7 +8,7 @@
 
 [TOON (Token-Oriented Object Notation)](https://github.com/toon-format/toon) is an open data format (v3.0, MIT licensed) designed to encode structured data with fewer tokens than JSON. It combines YAML-style indentation for nested objects with CSV-style tabular layout for uniform arrays.
 
-VibeMCP is the first email and calendar MCP server with native TOON output. Instead of converting JSON to TOON after the fact, VibeMCP encodes at the source level — selecting optimal fields per data type and transforming nested API responses into flat structures before serialization.
+VibeMCP is the first email and calendar MCP server with native TOON output. Instead of converting JSON to TOON after the fact, VibeMCP encodes at the source level, selecting optimal fields per data type and transforming nested API responses into flat structures before serialization.
 
 ---
 
@@ -16,7 +16,7 @@ VibeMCP is the first email and calendar MCP server with native TOON output. Inst
 
 ### Tabular Arrays (Primary Use in VibeMCP)
 
-Most MCP tool outputs are lists of similar objects — emails, events, folders, labels. TOON encodes these as a header + rows:
+Most MCP tool outputs are lists of similar objects (emails, events, folders, labels). TOON encodes these as a header + rows:
 
 ```
 messages[3]{id,subject,from,date,snippet}
@@ -26,9 +26,9 @@ msg003	Lunch?	bob@example.com	2025-12-16	Are you free Thursday
 ```
 
 **Line 1 (Header):** `typeName[count]{field1,field2,...}` declares the schema once.
-- `messages` — type label
-- `[3]` — row count (enables LLM to verify completeness)
-- `{id,subject,from,date,snippet}` — column names in order
+- `messages` - type label
+- `[3]` - row count (enables LLM to verify completeness)
+- `{id,subject,from,date,snippet}` - column names in order
 
 **Lines 2+:** Tab-delimited values. One row per object. No repeated keys, no brackets, no quotes (unless the value contains a delimiter or special character).
 
@@ -60,7 +60,7 @@ message:
   attachments: [{"attachmentId":"att1","filename":"Q4_slides.pdf","mimeType":"application/pdf","size":245000}]
 ```
 
-Complex nested values (like the `attachments` array) are JSON-serialized inline. This is intentional — see [Nested Objects](#nested-objects) below.
+Complex nested values (like the `attachments` array) are JSON-serialized inline. This is intentional; see [Nested Objects](#nested-objects) below.
 
 ---
 
@@ -74,11 +74,11 @@ VibeMCP's TOON encoder lives in `src/toon/encoder.ts` with three functions:
 |----------|---------|---------|
 | `encodeToon(typeName, items, fields, options)` | Encode array of objects as header + rows | List tools (`gmail_list_messages`, `outlook_list_messages`, `calendar_list_events`, etc.) |
 | `encodeToonSingle(typeName, obj)` | Encode single object as key-value pairs | Detail tools (`gmail_get_message`, `outlook_get_message`) |
-| `formatOutput(data, format, typeName, fields)` | Smart dispatch — picks the right encoder based on data shape, or returns JSON if `format: "json"` | All tool handlers |
+| `formatOutput(data, format, typeName, fields)` | Smart dispatch that picks the right encoder based on data shape, or returns JSON if `format: "json"` | All tool handlers |
 
 ### Field Selection Per Data Type
 
-VibeMCP selects specific fields per data type rather than dumping all API response fields. This is a key part of the token optimization — it happens before TOON encoding:
+VibeMCP selects specific fields per data type rather than dumping all API response fields. This is a key part of the token optimization, and it happens before TOON encoding:
 
 | Data Type | TOON Fields | Excluded Fields |
 |-----------|-------------|-----------------|
@@ -143,7 +143,7 @@ API responses from Google and Microsoft contain deeply nested structures:
 
 ### VibeMCP's Approach: Transform and Flatten in the Service Layer
 
-TOON v3.0 supports nested objects via indentation (like YAML). VibeMCP takes a simpler approach — each service layer transforms raw API responses into typed objects, extracting nested values into flat fields where possible.
+TOON v3.0 supports nested objects via indentation (like YAML). VibeMCP takes a simpler approach: each service layer transforms raw API responses into typed objects, extracting nested values into flat fields where possible.
 
 **Google Calendar** (full flattening):
 - `start.dateTime` or `start.date` → `start` (flat string)
@@ -154,10 +154,10 @@ TOON v3.0 supports nested objects via indentation (like YAML). VibeMCP takes a s
 **Outlook / Microsoft Graph** (partial flattening):
 - `from.emailAddress.address` → `from` (flat string)
 - `organizer.emailAddress.address` → `organizer` (flat string)
-- `start` → `{ dateTime, timeZone }` (still nested — simplified but not flat)
+- `start` → `{ dateTime, timeZone }` (still nested, simplified but not flat)
 - `end` → `{ dateTime, timeZone }` (still nested)
 
-Google Calendar achieves 70% savings because its service layer produces fully flat records. Outlook Calendar savings are lower because `start`/`end` retain a nested structure — when encoded in TOON tabular format, `escapeValue` serializes these nested objects as JSON strings inline.
+Google Calendar achieves 70% savings because its service layer produces fully flat records. Outlook Calendar savings are lower because `start`/`end` retain a nested structure. When encoded in TOON tabular format, `escapeValue` serializes these nested objects as JSON strings inline.
 
 **For detail views** (single objects like `gmail_get_message`), nested values that cannot be meaningfully flattened (like an array of attachment metadata) are JSON-serialized inline by `encodeToonSingle`:
 
@@ -216,7 +216,7 @@ The LLM reads the header and knows what columns to expect. No version negotiatio
 
 ### Adding Fields
 
-New fields are appended to the field list. Existing fields keep their positions. An LLM consuming VibeMCP v0.1 output and then VibeMCP v0.2 output will see a wider table — the first 5 columns remain identical.
+New fields are appended to the field list. Existing fields keep their positions. An LLM consuming VibeMCP v0.1 output and then VibeMCP v0.2 output will see a wider table, but the first 5 columns remain identical.
 
 ### Removing Fields
 
@@ -228,7 +228,7 @@ Field renames are visible in the header. `receivedDateTime` → `date` would app
 
 ### Type Changes
 
-TOON values are strings on the wire (like CSV). The header doesn't declare types — the LLM infers them from context (`2025-12-18` is a date, `42` is a number). Type changes in the underlying data are transparent.
+TOON values are strings on the wire (like CSV). The header doesn't declare types. The LLM infers them from context (`2025-12-18` is a date, `42` is a number). Type changes in the underlying data are transparent.
 
 ---
 
@@ -236,7 +236,7 @@ TOON values are strings on the wire (like CSV). The header doesn't declare types
 
 ### No Compatibility Layer Needed
 
-MCP tools return `TextContent` — plain text strings. The MCP protocol has no opinion on what format that text is in. A tool can return JSON, TOON, Markdown, CSV, or prose.
+MCP tools return `TextContent`, which is plain text strings. The MCP protocol has no opinion on what format that text is in. A tool can return JSON, TOON, Markdown, CSV, or prose.
 
 ```typescript
 // VibeMCP tool response (TOON)
@@ -252,7 +252,7 @@ Any MCP client that can read `text` content can read TOON output. The optimizati
 
 ### What the LLM Sees
 
-When an MCP client (like Claude Code) calls `gmail_list_messages`, VibeMCP returns TOON text. The LLM receives this as tool result content — just a string. The LLM reads the header, understands the schema, and extracts data. No special parser, no SDK changes, no client-side configuration.
+When an MCP client (like Claude Code) calls `gmail_list_messages`, VibeMCP returns TOON text. The LLM receives this as tool result content, just a string. The LLM reads the header, understands the schema, and extracts data. No special parser, no SDK changes, no client-side configuration.
 
 ### JSON Fallback
 
@@ -271,9 +271,9 @@ Measured on live accounts with real data, February 2026:
 
 | Dataset | JSON Tokens | TOON Tokens | Savings |
 |---------|:-----------:|:-----------:|:-------:|
-| Gmail — 10 messages | 961 | 591 | **38%** |
-| Outlook — 10 messages | 1,480 | 872 | **41%** |
-| Google Calendar — 11 events | 1,462 | 441 | **70%** |
+| Gmail (10 messages) | 961 | 591 | **38%** |
+| Outlook (10 messages) | 1,480 | 872 | **41%** |
+| Google Calendar (11 events) | 1,462 | 441 | **70%** |
 | **Combined** | **3,903** | **1,904** | **51%** |
 
 Calendar events show the highest savings because the original Google Calendar API response contains deeply nested objects (`start.dateTime`, `start.timeZone`, `attendees[].email`, `organizer.email`, `conferenceData.entryPoints[].uri`) that VibeMCP's Google Calendar service transforms into a flat row of primitive values.
@@ -308,7 +308,7 @@ VibeMCP implements a subset of [TOON v3.0](https://github.com/toon-format/spec):
 
 ## Further Reading
 
-- [TOON Specification v3.0](https://github.com/toon-format/spec) — Full normative spec
-- [TOON Format Repository](https://github.com/toon-format/toon) — Overview and ecosystem
-- [VibeMCP README](README.md) — Installation, setup, and tool reference
-- [VibeMCP Source: `src/toon/encoder.ts`](src/toon/encoder.ts) — Encoder implementation
+- [TOON Specification v3.0](https://github.com/toon-format/spec) - Full normative spec
+- [TOON Format Repository](https://github.com/toon-format/toon) - Overview and ecosystem
+- [VibeMCP README](README.md) - Installation, setup, and tool reference
+- [VibeMCP Source: `src/toon/encoder.ts`](src/toon/encoder.ts) - Encoder implementation

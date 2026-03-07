@@ -18,7 +18,7 @@ import { logError, ErrorCategory } from '../utils/logger.js';
 
 export function registerUnifiedTools(server: McpServer): void {
   // ===================================================================
-  // Unified Search — search across all email accounts
+  // Unified Search - search across all email accounts
   // ===================================================================
 
   server.tool(
@@ -105,7 +105,7 @@ export function registerUnifiedTools(server: McpServer): void {
   );
 
   // ===================================================================
-  // Unified Inbox — aggregated unread view
+  // Unified Inbox - aggregated unread view
   // ===================================================================
 
   server.tool(
@@ -185,7 +185,7 @@ export function registerUnifiedTools(server: McpServer): void {
   );
 
   // ===================================================================
-  // Unified Calendar — merged calendar view
+  // Unified Calendar - merged calendar view
   // ===================================================================
 
   server.tool(

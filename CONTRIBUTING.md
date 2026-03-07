@@ -95,12 +95,15 @@ src/
 │   ├── ms-mail.ts        # Microsoft Graph Mail (native fetch)
 │   ├── google-calendar.ts # Google Calendar API service
 │   ├── ms-calendar.ts    # Microsoft Graph Calendar (native fetch)
+│   ├── google-contacts.ts # Google People API (contacts)
+│   ├── ms-contacts.ts    # Microsoft Graph Contacts (native fetch)
 │   └── cache.ts          # Service instance cache (10-min TTL)
 ├── tools/
 │   ├── admin.ts          # Account management tools (7)
-│   ├── gmail.ts          # Gmail tool handlers (8)
-│   ├── outlook.ts        # Outlook tool handlers (8)
-│   ├── calendar.ts       # Unified calendar tools (5)
+│   ├── gmail.ts          # Gmail tool handlers (16)
+│   ├── outlook.ts        # Outlook tool handlers (16)
+│   ├── calendar.ts       # Unified calendar tools (6)
+│   ├── contacts.ts       # Contact tools (3)
 │   └── unified.ts        # Cross-account aggregation tools (3)
 ├── toon/
 │   ├── encoder.ts        # TOON serialization (encodeToon, formatOutput)
@@ -121,10 +124,14 @@ npx jest tests/toon-encoder.test.ts  # Run a specific test file
 ```
 
 **Test files:**
-- `toon-encoder.test.ts` — TOON encoder (encodeToon, encodeToonSingle, formatOutput)
-- `logger.test.ts` — Logger utility and error categories
-- `token-store.test.ts` — Token file read/write/delete
-- `cache.test.ts` — Service instance cache
+- `toon-encoder.test.ts` - TOON encoder (encodeToon, encodeToonSingle, formatOutput)
+- `logger.test.ts` - Logger utility and error categories
+- `token-store.test.ts` - Token file read/write/delete
+- `cache.test.ts` - Service instance cache
+- `gmail-features.test.ts` - Gmail label CRUD, batch modify, attachments, vacation
+- `outlook-features.test.ts` - Outlook categories, flags, batch update, attachments, auto-reply
+- `calendar-features.test.ts` - Calendar update, free/busy, RRULE parsing
+- `contacts.test.ts` - Contact search, resolve, list, provider detection
 
 When adding new features, include corresponding tests.
 
@@ -167,13 +174,20 @@ refactor: simplify multi-account handling
 ### High Priority
 
 - [x] Unit tests for TOON encoder, logger, token store, service cache
-- [ ] Integration tests for tool handlers
-- [ ] Attachment handling (upload/download)
-- [ ] Google Calendar event update support
-- [ ] Gmail label management (create/delete/apply)
+- [x] Integration tests for tool handlers (Gmail, Outlook, Calendar, Contacts)
+- [x] Attachment handling (download for Gmail and Outlook)
+- [x] Google Calendar event update support
+- [x] Gmail label management (create, update, delete, apply to messages)
+- [x] Email batch operations (archive, mark read/unread, move to folder)
+- [x] Outlook categories and follow-up flags
 
 ### Medium Priority
 
+- [x] Contact name resolution via Google People API and Microsoft Graph
+- [x] Calendar free/busy lookup
+- [x] Recurring event support (RRULE patterns)
+- [x] Out-of-office and auto-reply status
+- [ ] Smart reply draft generation
 - [ ] Slack integration (new service module)
 - [ ] Todoist integration
 - [ ] TOON encoder improvements (better field selection)

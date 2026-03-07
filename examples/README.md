@@ -43,9 +43,9 @@ npx @vibetensor/vibemcp accounts list                     # Verify accounts
 
 Credentials can be provided via:
 
-1. **MCP client env** (recommended) — set in Claude Desktop config JSON
+1. **MCP client env** (recommended) - set in Claude Desktop config JSON
 2. **`.env` file** in your current working directory
-3. **`~/.vibemcp/.env`** — persistent config location
+3. **`~/.vibemcp/.env`** - persistent config location
 
 | Variable | Required | Description |
 |----------|----------|-------------|

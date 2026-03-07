@@ -1,4 +1,4 @@
-import { encodeToon, encodeToonSingle, formatOutput } from '../src/toon/encoder.js';
+import { encodeToon, encodeToonSingle, formatOutput, stripHtml } from '../src/toon/encoder.js';
 
 describe('encodeToon', () => {
   it('should return empty marker for empty array', () => {
@@ -106,6 +106,71 @@ describe('encodeToon', () => {
     expect(lines[1]).toContain('1');
     expect(lines[1]).toContain('key');
   });
+
+  it('should truncate long values when maxValueLength is set', () => {
+    const longStr = 'a'.repeat(600);
+    const data = [{ id: '1', text: longStr }];
+    const result = encodeToon('items', data, ['id', 'text']);
+    const lines = result.split('\n');
+
+    // Default maxValueLength is 500, so 500 chars + '...'
+    expect(lines[1]).toContain('a'.repeat(500) + '...');
+    expect(lines[1]).not.toContain('a'.repeat(501));
+  });
+
+  it('should not truncate when maxValueLength is 0', () => {
+    const longStr = 'a'.repeat(600);
+    const data = [{ id: '1', text: longStr }];
+    const result = encodeToon('items', data, ['id', 'text'], { maxValueLength: 0 });
+    const lines = result.split('\n');
+
+    expect(lines[1]).toContain(longStr);
+  });
+
+  it('should flatten calendar dateTime objects', () => {
+    const data = [
+      {
+        id: 'ev1',
+        start: { dateTime: '2026-03-07T10:00:00Z', timeZone: 'UTC' },
+        end: { dateTime: '2026-03-07T11:00:00Z', timeZone: 'UTC' },
+      },
+    ];
+    const result = encodeToon('events', data as Record<string, unknown>[], ['id', 'start', 'end']);
+    const lines = result.split('\n');
+
+    expect(lines[1]).toBe('ev1\t2026-03-07T10:00:00Z\t2026-03-07T11:00:00Z');
+  });
+
+  it('should flatten calendar date-only objects', () => {
+    const data = [
+      {
+        id: 'ev1',
+        start: { date: '2026-03-07' },
+        end: { date: '2026-03-08' },
+      },
+    ];
+    const result = encodeToon('events', data as Record<string, unknown>[], ['id', 'start', 'end']);
+    const lines = result.split('\n');
+
+    expect(lines[1]).toBe('ev1\t2026-03-07\t2026-03-08');
+  });
+
+  it('should flatten primitive arrays as pipe-separated values', () => {
+    const data = [{ id: '1', labels: ['INBOX', 'UNREAD', 'IMPORTANT'] }];
+    const result = encodeToon('messages', data as Record<string, unknown>[], ['id', 'labels']);
+    const lines = result.split('\n');
+
+    expect(lines[1]).toBe('1\tINBOX|UNREAD|IMPORTANT');
+  });
+
+  it('should handle empty arrays in values', () => {
+    const data = [{ id: '1', tags: [] as string[] }];
+    const result = encodeToon('items', data as Record<string, unknown>[], ['id', 'tags']);
+    const lines = result.split('\n');
+
+    // Empty array returns empty string (no quotes)
+    expect(lines[1]).toBe('1\t');
+  });
 });
 
 describe('encodeToonSingle', () => {
@@ -199,5 +264,35 @@ describe('formatOutput', () => {
 
     expect(lines[0]).toBe('messages[1]{id,subject}');
     expect(lines[1]).toBe('msg001\tWelcome');
+  });
+});
+
+describe('stripHtml', () => {
+  it('should strip basic HTML tags', () => {
+    expect(stripHtml('<p>Hello <b>world</b></p>')).toBe('Hello world');
+  });
+
+  it('should convert br tags to newlines', () => {
+    expect(stripHtml('line1<br>line2<br/>line3')).toBe('line1\nline2\nline3');
+  });
+
+  it('should convert closing p and div tags to newlines', () => {
+    expect(stripHtml('<p>Para 1</p><p>Para 2</p>')).toBe('Para 1\nPara 2');
+  });
+
+  it('should decode HTML entities', () => {
+    expect(stripHtml('A &amp; B &lt; C &gt; D &quot;E&quot; F&#39;s')).toBe('A & B < C > D "E" F\'s');
+  });
+
+  it('should replace &nbsp; with spaces', () => {
+    expect(stripHtml('hello&nbsp;world')).toBe('hello world');
+  });
+
+  it('should collapse excessive newlines', () => {
+    expect(stripHtml('a\n\n\n\n\nb')).toBe('a\n\nb');
+  });
+
+  it('should trim whitespace', () => {
+    expect(stripHtml('  <p>text</p>  ')).toBe('text');
   });
 });

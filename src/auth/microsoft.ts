@@ -17,7 +17,7 @@ import {
 } from '../config.js';
 import { log } from '../utils/logger.js';
 
-// Personal account domains — Graph Teams/Chat scopes not supported for MSA
+// Personal account domains - Graph Teams/Chat scopes not supported for MSA
 const PERSONAL_DOMAINS = new Set([
   'hotmail.com',
   'outlook.com',
@@ -177,7 +177,7 @@ export async function initiateDeviceFlow(email: string): Promise<{
       },
     };
 
-    // Store for later completion — but we need a different approach
+    // Store for later completion - but we need a different approach
     // MSAL Node's device code flow is a single call that blocks until complete
     // We'll start it but not await it immediately
     const tokenPromise = app.acquireTokenByDeviceCode(request);

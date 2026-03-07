@@ -21,8 +21,11 @@ flowchart TD
 
     G1 & G2 & M1 & M2 --> UI & US & UC
 
-    style Accounts fill:#f0f9ff,stroke:#0ea5e9
-    style Tools fill:#f0fdf4,stroke:#22c55e
+    classDef acctStyle fill:#f0f9ff,stroke:#0ea5e9,color:#0c4a6e
+    classDef toolStyle fill:#f0fdf4,stroke:#22c55e,color:#14532d
+
+    class Accounts acctStyle
+    class Tools toolStyle
 ```
 
 ## Adding Accounts

@@ -17,7 +17,7 @@ Most email and calendar MCP servers return verbose JSON:
 
 ## The Solution
 
-VibeMCP uses [TOON (Token-Oriented Object Notation)](https://github.com/toon-format/toon) — an open format that declares the schema once, then streams data as tab-delimited rows:
+VibeMCP uses [TOON (Token-Oriented Object Notation)](https://github.com/toon-format/toon), an open format that declares the schema once, then streams data as tab-delimited rows:
 
 ```
 messages[2]{id,subject,from,date,snippet}
@@ -36,7 +36,7 @@ flowchart LR
     end
 
     subgraph VibeMCP["VibeMCP Server"]
-        TH["31 Tool Handlers"]
+        TH["51 Tool Handlers"]
         TE["TOON Encoder"]
     end
 
@@ -51,25 +51,29 @@ flowchart LR
     TH -->|"encode"| TE
     TE -->|"TOON output\n(51% fewer tokens)"| CL
 
-    style VibeMCP fill:#f0f9ff,stroke:#0ea5e9
-    style Input fill:#faf5ff,stroke:#a855f7
-    style Providers fill:#f0fdf4,stroke:#22c55e
+    classDef vmcp fill:#f0f9ff,stroke:#0ea5e9
+    classDef input fill:#faf5ff,stroke:#a855f7
+    classDef providers fill:#f0fdf4,stroke:#22c55e
+
+    class VibeMCP vmcp
+    class Input input
+    class Providers providers
 ```
 
 ## Key Features
 
-- **31 tools** across Gmail, Outlook, Google Calendar, and Outlook Calendar
+- **51 tools** across Gmail, Outlook, Google Calendar, Outlook Calendar, and Contacts
 - **TOON output** with per-call `format` parameter (switch to JSON anytime)
-- **Multi-account** — connect multiple Google and Microsoft accounts
+- **Multi-account** - connect multiple Google and Microsoft accounts
 - **Cross-account** search, unified inbox, and merged calendar
-- **Self-hosted** — no telemetry, no data retention, fully local
+- **Self-hosted** - no telemetry, no data retention, fully local
 
 ## Comparison
 
 | Feature | VibeMCP | gmail-mcp | ms-365-mcp-server |
 |:--------|:-------:|:---------:|:-----------------:|
-| Gmail | 8 tools | 60+ tools | — |
-| Outlook Mail | 8 tools | — | 90+ tools |
+| Gmail | 16 tools | 60+ tools | - |
+| Outlook Mail | 16 tools | - | 90+ tools |
 | **Unified (both)** | **Yes** | No | No |
 | **TOON output** | **Yes** | No | No |
 | **Multi-account** | **Native** | No | No |
@@ -79,6 +83,6 @@ Existing TOON MCP servers (like `toon-mcp`) are generic JSON-to-TOON converters.
 
 ## Next Steps
 
-- [Getting Started](/guide/getting-started) — install and authenticate in under 5 minutes
-- [TOON Format](/guide/toon-format) — how the token optimization works
-- [Tools Reference](/reference/tools) — all 31 tools documented
+- [Getting Started](/guide/getting-started) - install and authenticate in under 5 minutes
+- [TOON Format](/guide/toon-format) - how the token optimization works
+- [Tools Reference](/reference/tools) - all 51 tools documented

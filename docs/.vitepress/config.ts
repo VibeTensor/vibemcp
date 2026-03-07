@@ -93,8 +93,9 @@ export default withMermaid(
       },
     },
 
-    mermaid: {
-      theme: 'neutral',
+    mermaid: {},
+    mermaidPlugin: {
+      class: 'mermaid',
     },
   }),
 )

@@ -18,7 +18,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 
 // =====================================================================
-// Config Directory — persistent storage for tokens and accounts
+// Config Directory - persistent storage for tokens and accounts
 // =====================================================================
 
 function resolveConfigDir(): string {
@@ -40,7 +40,7 @@ if (!fs.existsSync(CONFIG_DIR)) {
 export const ACCOUNTS_FILE = path.join(CONFIG_DIR, 'accounts.json');
 
 // =====================================================================
-// .env Loading — try cwd first (dev), then config dir (production)
+// .env Loading - try cwd first (dev), then config dir (production)
 // =====================================================================
 
 const cwdEnv = path.join(process.cwd(), '.env');
@@ -74,8 +74,13 @@ export const GOOGLE_OAUTH_PORT = parseInt(getEnv('GOOGLE_OAUTH_PORT', '4100'), 1
 export const GOOGLE_SCOPES = [
   'openid',
   'https://www.googleapis.com/auth/userinfo.email',
-  'https://mail.google.com/',
+  'https://www.googleapis.com/auth/gmail.readonly',
+  'https://www.googleapis.com/auth/gmail.modify',
+  'https://www.googleapis.com/auth/gmail.send',
+  'https://www.googleapis.com/auth/gmail.compose',
+  'https://www.googleapis.com/auth/gmail.settings.basic',
   'https://www.googleapis.com/auth/calendar',
+  'https://www.googleapis.com/auth/contacts.readonly',
 ];
 
 // Microsoft MSAL
@@ -83,10 +88,10 @@ export const AZURE_CLIENT_ID = getEnv('MICROSOFT_CLIENT_ID');
 export const AZURE_TENANT_ID = getEnv('MICROSOFT_TENANT_ID', 'common');
 export const MS_TOKEN_CACHE_PATH = path.join(CONFIG_DIR, 'ms-token-cache.json');
 
-// Base scopes — work for ALL Microsoft accounts (personal + business)
-export const MS_SCOPES_BASE = ['Mail.ReadWrite', 'Mail.Send', 'Calendars.ReadWrite', 'User.Read'];
+// Base scopes - work for ALL Microsoft accounts (personal + business)
+export const MS_SCOPES_BASE = ['Mail.ReadWrite', 'Mail.Send', 'Calendars.ReadWrite', 'User.Read', 'Contacts.Read', 'People.Read'];
 
-// Teams scopes — only work for business/organizational accounts
+// Teams scopes - only work for business/organizational accounts
 export const MS_SCOPES_TEAMS = [
   'Chat.ReadWrite',
   'User.ReadBasic.All',
