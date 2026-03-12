@@ -165,17 +165,28 @@ export function formatOutput(
 
 /** Strip HTML tags from a string, preserving text content */
 export function stripHtml(html: string): string {
-  return html
+  let text = html
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/p>/gi, '\n')
     .replace(/<\/div>/gi, '\n')
     .replace(/<[^>]+>/g, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
+    .replace(/&nbsp;/g, ' ');
+
+  // Decode named entities in correct order: decode &amp; LAST to prevent
+  // double-unescaping (e.g. "&amp;lt;" becoming "&lt;" then "<").
+  text = text
     .replace(/&lt;/g, '<')
     .replace(/&gt;/g, '>')
     .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
+    .replace(/&#39;/g, "'");
+
+  // Decode &amp; last and loop to fully resolve multi-level encoding
+  // such as "&amp;amp;" which requires iterative replacement
+  let prev: string;
+  do {
+    prev = text;
+    text = text.replace(/&amp;/g, '&');
+  } while (text !== prev);
+
+  return text.replace(/\n{3,}/g, '\n\n').trim();
 }

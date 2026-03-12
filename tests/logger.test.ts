@@ -52,6 +52,36 @@ describe('logger', () => {
         expect.stringContaining('test@test.com'),
       );
     });
+
+    it('should redact sensitive keys in context', () => {
+      log('info', 'auth attempt', {
+        account: 'user@test.com',
+        token: 'secret-token-value',
+        refreshToken: 'refresh-secret',
+      });
+      const contextArg = errorSpy.mock.calls[0]![1] as string;
+      expect(contextArg).not.toContain('secret-token-value');
+      expect(contextArg).not.toContain('refresh-secret');
+      expect(contextArg).toContain('[REDACTED]');
+      expect(contextArg).toContain('user@test.com');
+    });
+
+    it('should redact nested sensitive keys', () => {
+      log('info', 'nested', {
+        auth: { password: 'hunter2', user: 'admin' },
+      });
+      const contextArg = errorSpy.mock.calls[0]![1] as string;
+      expect(contextArg).not.toContain('hunter2');
+      expect(contextArg).toContain('[REDACTED]');
+      expect(contextArg).toContain('admin');
+    });
+
+    it('should not redact non-sensitive keys', () => {
+      log('info', 'safe data', { account: 'user@test.com', status: 'active' });
+      const contextArg = errorSpy.mock.calls[0]![1] as string;
+      expect(contextArg).toContain('user@test.com');
+      expect(contextArg).toContain('active');
+    });
   });
 
   describe('logError', () => {

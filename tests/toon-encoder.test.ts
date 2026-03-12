@@ -295,4 +295,19 @@ describe('stripHtml', () => {
   it('should trim whitespace', () => {
     expect(stripHtml('  <p>text</p>  ')).toBe('text');
   });
+
+  it('should not double-unescape entities like &amp;lt;', () => {
+    // "&amp;lt;" should become "&lt;" not "<"
+    expect(stripHtml('&amp;lt;script&amp;gt;')).toBe('&lt;script&gt;');
+  });
+
+  it('should fully resolve multi-level &amp; encoding', () => {
+    // "&amp;amp;" should become "&amp;" then "&" via iterative decoding
+    expect(stripHtml('&amp;amp;')).toBe('&');
+    expect(stripHtml('&amp;amp;amp;')).toBe('&');
+  });
+
+  it('should handle mixed entities without double-unescaping', () => {
+    expect(stripHtml('A &amp;lt; B &amp; C')).toBe('A &lt; B & C');
+  });
 });
