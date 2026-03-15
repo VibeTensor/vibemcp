@@ -501,6 +501,15 @@ Users are responsible for creating their own API credentials and complying with 
 
 ---
 
+## Sponsors
+
+VibeMCP is free for personal use. If you or your organization benefit from it, please consider sponsoring to support continued development.
+
+<a href="https://polar.sh/VibeTensor"><img src="https://polar.sh/embed/seeks-funding-shield.svg?org=VibeTensor" alt="Sponsor on Polar" /></a>
+<a href="https://github.com/sponsors/VibeTensor"><img src="https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-ea4aaa?style=flat-square&logo=github" alt="GitHub Sponsors" /></a>
+
+---
+
 ## License
 
 **[PolyForm Noncommercial 1.0.0](LICENSE)** - [VibeTensor Private Limited](https://vibetensor.com)
