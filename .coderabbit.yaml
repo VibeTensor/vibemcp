@@ -21,6 +21,10 @@ reviews:
   # Request changes on high severity issues
   request_changes_workflow: true
 
+  # Auto-approve PRs when no actionable issues found
+  auto_approve:
+    enabled: true
+
   # High-level summary in PR comment
   high_level_summary: true
 
