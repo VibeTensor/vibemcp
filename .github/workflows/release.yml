@@ -55,12 +55,12 @@ jobs:
 
             ## Installation
             ```bash
-            npm install @vibetensor/vibemcp@${{ github.ref_name }}
+            npm install vibemcp@${{ github.ref_name }}
             ```
 
             Or use directly:
             ```bash
-            npx @vibetensor/vibemcp@${{ github.ref_name }}
+            npx vibemcp@${{ github.ref_name }}
             ```
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') }}

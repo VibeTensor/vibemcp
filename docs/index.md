@@ -90,7 +90,7 @@ flowchart TD
   "mcpServers": {
     "vibemcp": {
       "command": "npx",
-      "args": ["-y", "@vibetensor/vibemcp"],
+      "args": ["-y", "vibemcp"],
       "env": {
         "GOOGLE_CLIENT_ID": "your-google-client-id",
         "GOOGLE_CLIENT_SECRET": "your-google-client-secret",

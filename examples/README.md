@@ -34,9 +34,9 @@ Fill in your OAuth credentials. VibeMCP stores tokens in `~/.vibemcp/`.
 If you prefer to authenticate before using Claude Desktop:
 
 ```bash
-npx @vibetensor/vibemcp auth google user@gmail.com       # Opens browser
-npx @vibetensor/vibemcp auth microsoft user@outlook.com   # Device code flow
-npx @vibetensor/vibemcp accounts list                     # Verify accounts
+npx vibemcp auth google user@gmail.com       # Opens browser
+npx vibemcp auth microsoft user@outlook.com   # Device code flow
+npx vibemcp accounts list                     # Verify accounts
 ```
 
 ## Environment Variables

@@ -5,7 +5,7 @@
     <strong>Token-Optimized Unified MCP Server for Gmail & Microsoft 365</strong>
   </p>
   <p align="center">
-    <a href="https://www.npmjs.com/package/@vibetensor/vibemcp"><img src="https://img.shields.io/npm/v/@vibetensor/vibemcp.svg" alt="npm version"></a>
+    <a href="https://www.npmjs.com/package/vibemcp"><img src="https://img.shields.io/npm/v/vibemcp.svg" alt="npm version"></a>
     <a href="https://polyformproject.org/licenses/noncommercial/1.0.0/"><img src="https://img.shields.io/badge/License-PolyForm%20Noncommercial-purple.svg" alt="License"></a>
     <a href="https://nodejs.org"><img src="https://img.shields.io/badge/node-%3E%3D18-brightgreen" alt="Node.js"></a>
     <a href="https://modelcontextprotocol.io"><img src="https://img.shields.io/badge/MCP-1.0-blue" alt="MCP"></a>
@@ -88,7 +88,7 @@ Calendar events show 70% savings because the raw Google Calendar API response ha
     "vibemcp": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@vibetensor/vibemcp"]
+      "args": ["-y", "vibemcp"]
     }
   }
 }
@@ -104,7 +104,7 @@ Pass credentials via your MCP client's `env` block:
     "vibemcp": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@vibetensor/vibemcp"],
+      "args": ["-y", "vibemcp"],
       "env": {
         "GOOGLE_CLIENT_ID": "your-google-client-id",
         "GOOGLE_CLIENT_SECRET": "your-google-client-secret",
@@ -132,8 +132,8 @@ Through your AI assistant:
 Or via CLI:
 
 ```bash
-npx @vibetensor/vibemcp auth google your@gmail.com
-npx @vibetensor/vibemcp auth microsoft your@outlook.com
+npx vibemcp auth google your@gmail.com
+npx vibemcp auth microsoft your@outlook.com
 ```
 
 ### 4. Use
@@ -328,7 +328,7 @@ src/
 **Key design decisions:**
 
 - **`~/.vibemcp/` config directory** - Tokens, accounts, and MSAL cache stored in a persistent user directory (`~/.vibemcp/`), not relative to the package install location. Overridable via `VIBEMCP_CONFIG_DIR` env var.
-- **Default = MCP server** - Running `vibemcp` (or `npx @vibetensor/vibemcp`) with no arguments starts the MCP stdio server. CLI subcommands (`auth`, `accounts`) handle setup.
+- **Default = MCP server** - Running `vibemcp` (or `npx vibemcp`) with no arguments starts the MCP stdio server. CLI subcommands (`auth`, `accounts`) handle setup.
 - **stderr-safe logging** - `console.log` redirected to `console.error` at import time, keeping stdout clean for MCP JSON-RPC
 - **Static factory pattern** - Services use `ServiceClass.create(email)` because auth initialization is async
 - **Provider auto-detection** - Calendar tools check the account registry to route to the correct service
@@ -407,7 +407,7 @@ docker run --env-file .env vibemcp
 - [x] Multi-account authentication (Google OAuth + Microsoft Device Code)
 - [x] Unified cross-account tools (search, inbox, calendar)
 - [x] CLI for account management
-- [x] Published on [npm](https://www.npmjs.com/package/@vibetensor/vibemcp)
+- [x] Published on [npm](https://www.npmjs.com/package/vibemcp)
 
 ### v0.2 - Polish (Current)
 

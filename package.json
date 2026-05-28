@@ -1,5 +1,5 @@
 {
-  "name": "@vibetensor/vibemcp",
+  "name": "vibemcp",
   "version": "0.2.0",
   "description": "Token-Optimized Unified MCP Server for Gmail & Microsoft 365",
   "type": "module",

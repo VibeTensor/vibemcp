@@ -13,7 +13,7 @@ Pass credentials directly in your MCP client configuration. This is the simplest
   "mcpServers": {
     "vibemcp": {
       "command": "npx",
-      "args": ["-y", "@vibetensor/vibemcp"],
+      "args": ["-y", "vibemcp"],
       "env": {
         "GOOGLE_CLIENT_ID": "your-client-id.apps.googleusercontent.com",
         "GOOGLE_CLIENT_SECRET": "your-client-secret",
@@ -139,7 +139,7 @@ Config file location:
   "mcpServers": {
     "vibemcp": {
       "command": "npx",
-      "args": ["-y", "@vibetensor/vibemcp"],
+      "args": ["-y", "vibemcp"],
       "env": {
         "GOOGLE_CLIENT_ID": "your-client-id.apps.googleusercontent.com",
         "GOOGLE_CLIENT_SECRET": "your-client-secret",
@@ -161,7 +161,7 @@ Add to `~/.claude.json`:
     "vibemcp": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@vibetensor/vibemcp"],
+      "args": ["-y", "vibemcp"],
       "env": {
         "GOOGLE_CLIENT_ID": "your-client-id.apps.googleusercontent.com",
         "GOOGLE_CLIENT_SECRET": "your-client-secret",
