@@ -75,7 +75,7 @@ export default withMermaid(
 
       socialLinks: [
         { icon: 'github', link: 'https://github.com/VibeTensor/vibemcp' },
-        { icon: 'npm', link: 'https://www.npmjs.com/package/@vibetensor/vibemcp' },
+        { icon: 'npm', link: 'https://www.npmjs.com/package/vibemcp' },
       ],
 
       search: {

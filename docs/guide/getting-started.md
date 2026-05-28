@@ -25,7 +25,7 @@ Add to your Claude Desktop config file:
   "mcpServers": {
     "vibemcp": {
       "command": "npx",
-      "args": ["-y", "@vibetensor/vibemcp"],
+      "args": ["-y", "vibemcp"],
       "env": {
         "GOOGLE_CLIENT_ID": "your-google-client-id.apps.googleusercontent.com",
         "GOOGLE_CLIENT_SECRET": "your-google-client-secret",
@@ -47,7 +47,7 @@ Add to `~/.claude.json` under `mcpServers`:
     "vibemcp": {
       "type": "stdio",
       "command": "npx",
-      "args": ["-y", "@vibetensor/vibemcp"],
+      "args": ["-y", "vibemcp"],
       "env": {
         "GOOGLE_CLIENT_ID": "your-google-client-id.apps.googleusercontent.com",
         "GOOGLE_CLIENT_SECRET": "your-google-client-secret",
@@ -111,7 +111,7 @@ VibeMCP will:
 Or via CLI:
 
 ```bash
-npx @vibetensor/vibemcp auth google user@gmail.com
+npx vibemcp auth google user@gmail.com
 ```
 
 ### Microsoft Account
@@ -128,13 +128,13 @@ VibeMCP will:
 Or via CLI:
 
 ```bash
-npx @vibetensor/vibemcp auth microsoft user@outlook.com
+npx vibemcp auth microsoft user@outlook.com
 ```
 
 ### Verify Accounts
 
 ```bash
-npx @vibetensor/vibemcp accounts list
+npx vibemcp accounts list
 ```
 
 Or through your AI:
@@ -237,6 +237,6 @@ OAuth tokens are stored in `~/.vibemcp/`. If authentication seems broken:
 
 ```bash
 # Remove the account and re-authenticate
-npx @vibetensor/vibemcp accounts remove user@gmail.com
-npx @vibetensor/vibemcp auth google user@gmail.com
+npx vibemcp accounts remove user@gmail.com
+npx vibemcp auth google user@gmail.com
 ```
