@@ -268,6 +268,12 @@ describe('formatOutput', () => {
 });
 
 describe('stripHtml', () => {
+  it('leaves no tag behind for nested tag fragments', () => {
+    const out = stripHtml('<scr<script>ipt>alert(1)</scr</script>ipt>');
+    expect(out).not.toMatch(/<[^>]+>/);
+    expect(out).toContain('alert(1)');
+  });
+
   it('should strip basic HTML tags', () => {
     expect(stripHtml('<p>Hello <b>world</b></p>')).toBe('Hello world');
   });

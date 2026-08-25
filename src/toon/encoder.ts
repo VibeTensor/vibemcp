@@ -168,9 +168,17 @@ export function stripHtml(html: string): string {
   let text = html
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/p>/gi, '\n')
-    .replace(/<\/div>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&nbsp;/g, ' ');
+    .replace(/<\/div>/gi, '\n');
+
+  // Strip tags until stable so nested fragments such as "<scr<x>ipt"
+  // cannot reassemble into a tag after a single pass.
+  let prev: string;
+  do {
+    prev = text;
+    text = text.replace(/<[^>]+>/g, '');
+  } while (text !== prev);
+
+  text = text.replace(/&nbsp;/g, ' ');
 
   // Decode named entities in correct order: decode &amp; LAST to prevent
   // double-unescaping (e.g. "&amp;lt;" becoming "&lt;" then "<").
@@ -182,7 +190,6 @@ export function stripHtml(html: string): string {
 
   // Decode &amp; last and loop to fully resolve multi-level encoding
   // such as "&amp;amp;" which requires iterative replacement
-  let prev: string;
   do {
     prev = text;
     text = text.replace(/&amp;/g, '&');
