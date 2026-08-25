@@ -178,7 +178,10 @@ export async function initiateGoogleAuth(email: string): Promise<{ authUrl: stri
     log('warn', 'Could not open browser automatically');
   }
 
-  log('info', `Google auth initiated for ${email}, callback server listening on the configured GOOGLE_OAUTH_PORT`);
+  log(
+    'info',
+    `Google auth initiated for ${email}, callback server listening on the configured GOOGLE_OAUTH_PORT`,
+  );
   return { authUrl };
 }
 
