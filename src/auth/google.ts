@@ -158,7 +158,7 @@ export async function initiateGoogleAuth(email: string): Promise<{ authUrl: stri
       server.on('error', reject);
     });
   } catch (e) {
-    log('error', `Could not start callback server on port ${GOOGLE_OAUTH_PORT}: ${e}`);
+    log('error', `Could not start OAuth callback server on the configured GOOGLE_OAUTH_PORT: ${e}`);
     return null;
   }
 
@@ -178,7 +178,10 @@ export async function initiateGoogleAuth(email: string): Promise<{ authUrl: stri
     log('warn', 'Could not open browser automatically');
   }
 
-  log('info', `Google auth initiated for ${email}, callback server on port ${GOOGLE_OAUTH_PORT}`);
+  log(
+    'info',
+    `Google auth initiated for ${email}, callback server listening on the configured GOOGLE_OAUTH_PORT`,
+  );
   return { authUrl };
 }
 
