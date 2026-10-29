@@ -6,6 +6,7 @@
  */
 
 import http from 'node:http';
+import { randomBytes, timingSafeEqual } from 'node:crypto';
 import { URL } from 'node:url';
 import path from 'node:path';
 import { google } from 'googleapis';
@@ -26,10 +27,25 @@ import { log } from '../utils/logger.js';
 // Pending auth state (module-scoped, replaces Python's builtins hack)
 // =====================================================================
 
-const pendingFlows = new Map<
-  string,
-  { client: OAuth2Client; server: http.Server; code: string | null }
->();
+interface PendingGoogleFlow {
+  client: OAuth2Client;
+  server: http.Server;
+  code: string | null;
+  callbackConsumed: boolean;
+  exchanging: boolean;
+}
+
+const pendingFlows = new Map<string, PendingGoogleFlow>();
+
+function cleanupPendingFlow(email: string, flow: PendingGoogleFlow): void {
+  // An older exchange must never remove a replacement attempt.
+  if (pendingFlows.get(email) === flow) pendingFlows.delete(email);
+  try {
+    flow.server.close();
+  } catch {
+    /* already closed */
+  }
+}
 
 // =====================================================================
 // Token file management
@@ -111,72 +127,107 @@ export async function initiateGoogleAuth(email: string): Promise<{ authUrl: stri
   }
 
   const client = createOAuth2Client();
-
+  const oauthState = randomBytes(32).toString('base64url');
   const authUrl = client.generateAuthUrl({
     access_type: 'offline',
     prompt: 'select_account consent',
     login_hint: email,
     scope: GOOGLE_SCOPES,
+    state: oauthState,
   });
 
-  // Close any existing pending flow for this email
   const existing = pendingFlows.get(email);
-  if (existing?.server) {
-    try {
-      existing.server.close();
-    } catch {
-      /* ignore */
-    }
-  }
-
-  // Start callback server
-  let resolveCode: ((code: string) => void) | null = null;
-  const codePromise = new Promise<string>((resolve) => {
-    resolveCode = resolve;
-  });
-
-  const state: { code: string | null; server: http.Server | null } = { code: null, server: null };
+  if (existing) cleanupPendingFlow(email, existing);
 
   const server = http.createServer((req, res) => {
-    const url = new URL(req.url ?? '/', `http://localhost:${GOOGLE_OAUTH_PORT}`);
-    const code = url.searchParams.get('code');
-
-    if (code) {
-      state.code = code;
-      res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.end('<h2>Authentication successful! You can close this tab.</h2>');
-      resolveCode?.(code);
-    } else {
-      res.writeHead(400);
-      res.end('<h2>Authentication failed. No code received.</h2>');
+    if (req.method !== 'GET') {
+      res.writeHead(405, { Allow: 'GET' });
+      res.end('Only GET callbacks are accepted.');
+      return;
     }
+
+    let url: URL;
+    try {
+      url = new URL(req.url ?? '/', `http://localhost:${GOOGLE_OAUTH_PORT}`);
+    } catch {
+      res.writeHead(400);
+      res.end('Invalid callback URL.');
+      return;
+    }
+    if (url.pathname !== '/code') {
+      res.writeHead(404);
+      res.end('Unknown callback path.');
+      return;
+    }
+
+    const states = url.searchParams.getAll('state');
+    const suppliedState = states[0];
+    if (
+      states.length !== 1 ||
+      suppliedState === undefined ||
+      Buffer.byteLength(suppliedState) !== Buffer.byteLength(oauthState) ||
+      !timingSafeEqual(Buffer.from(suppliedState), Buffer.from(oauthState))
+    ) {
+      res.writeHead(400);
+      res.end('Invalid authorization state.');
+      return;
+    }
+    if (pendingFlows.get(email) !== flow || flow.callbackConsumed) {
+      res.writeHead(409);
+      res.end('This authorization attempt is no longer pending.');
+      return;
+    }
+    if (url.searchParams.has('error')) {
+      flow.callbackConsumed = true;
+      res.writeHead(400);
+      res.end('Authorization was not completed. Start a new attempt.');
+      cleanupPendingFlow(email, flow);
+      return;
+    }
+
+    const codes = url.searchParams.getAll('code');
+    const code = codes[0];
+    if (codes.length !== 1 || code === undefined || !code.trim()) {
+      res.writeHead(400);
+      res.end('A single authorization code is required.');
+      return;
+    }
+
+    flow.callbackConsumed = true;
+    flow.code = code;
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end('<h2>Authorization received. You can close this tab and complete authentication.</h2>');
   });
+  const flow: PendingGoogleFlow = {
+    client,
+    server,
+    code: null,
+    callbackConsumed: false,
+    exchanging: false,
+  };
+  pendingFlows.set(email, flow);
 
   try {
     await new Promise<void>((resolve, reject) => {
+      server.once('error', reject);
       server.listen(GOOGLE_OAUTH_PORT, 'localhost', () => resolve());
-      server.on('error', reject);
     });
   } catch (e) {
     log('error', `Could not start OAuth callback server on the configured GOOGLE_OAUTH_PORT: ${e}`);
+    cleanupPendingFlow(email, flow);
+    return null;
+  }
+  if (pendingFlows.get(email) !== flow) {
+    cleanupPendingFlow(email, flow);
     return null;
   }
 
-  state.server = server;
-  pendingFlows.set(email, { client, server, code: null });
-
-  // Store code promise for completion
-  codePromise.then((code) => {
-    const flow = pendingFlows.get(email);
-    if (flow) flow.code = code;
-  });
-
-  // Auto-open browser
   try {
     await open(authUrl);
   } catch {
     log('warn', 'Could not open browser automatically');
   }
+  if (pendingFlows.get(email) !== flow) return null;
 
   log(
     'info',
@@ -195,40 +246,29 @@ export async function completeGoogleAuth(email: string): Promise<boolean> {
     return false;
   }
 
-  // Wait a moment for the code to arrive if not yet received
-  if (!flow.code) {
+  if (!flow.code && !flow.exchanging) {
     await new Promise((resolve) => setTimeout(resolve, 2000));
   }
-
-  if (!flow.code) {
-    log('error', `No authorization code received yet for ${email}`);
+  if (pendingFlows.get(email) !== flow || !flow.code || flow.exchanging) {
+    log('error', `No unconsumed authorization code is ready for ${email}`);
     return false;
   }
 
+  const code = flow.code;
+  flow.code = null;
+  flow.exchanging = true;
   try {
-    const { tokens } = await flow.client.getToken(flow.code);
+    const { tokens } = await flow.client.getToken(code);
+    if (pendingFlows.get(email) !== flow) return false;
     flow.client.setCredentials(tokens);
     saveCredentials(email, tokens as Record<string, unknown>);
     log('info', `Google account ${email} authenticated successfully`);
-
-    // Cleanup
-    try {
-      flow.server.close();
-    } catch {
-      /* ignore */
-    }
-    pendingFlows.delete(email);
-
     return true;
-  } catch (e) {
-    log('error', `Failed to exchange code for ${email}: ${e}`);
-    try {
-      flow.server.close();
-    } catch {
-      /* ignore */
-    }
-    pendingFlows.delete(email);
+  } catch {
+    log('error', `Failed to exchange authorization code for ${email}`);
     return false;
+  } finally {
+    cleanupPendingFlow(email, flow);
   }
 }
 
