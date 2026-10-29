@@ -15,8 +15,8 @@
 import './utils/logger.js';
 
 import { createRequire } from 'node:module';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { createVibeMcpServer } from './server.js';
 
 import { registerAdminTools } from './tools/admin.js';
 import { registerGmailTools } from './tools/gmail.js';
@@ -34,7 +34,7 @@ const SERVER_NAME = 'vibemcp';
 // Initialize MCP Server
 // =============================================================================
 
-const server = new McpServer({
+const server = createVibeMcpServer({
   name: SERVER_NAME,
   version: VERSION,
 });

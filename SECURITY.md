@@ -70,10 +70,13 @@ VibeMCP runs entirely on your local machine. There is no VibeTensor-hosted backe
 
 ### Input Validation
 
+- Tool arguments are limited to 10,000 combined array elements and object keys before schema validation. Larger calls return a tool error without invoking the handler.
 - All tool parameters validated using Zod schemas
 - Type coercion for MCP protocol compatibility
 - No shell command execution from user input
 - No dynamic code evaluation
+
+The MCP transport is stdio. The localhost Google OAuth callback is not an MCP HTTP endpoint. An HTTP adapter must also set an appropriate request-body limit; the tool-argument limit does not bound strings, JSON parsing or other protocol messages.
 
 ### Data Flow
 
