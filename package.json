@@ -53,7 +53,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "@azure/msal-node": "^5.0.6",
+    "@azure/msal-node": "^7.1.0",
     "@modelcontextprotocol/sdk": "^1.32.0",
     "dotenv": "^17.3.1",
     "googleapis": "^172.0.0",
