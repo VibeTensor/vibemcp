@@ -61,6 +61,15 @@ jobs:
       - name: Pack release
         run: npm pack --json > release-pack.json
 
+      - name: Verify publishing credential is configured
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          if [ -z "$NODE_AUTH_TOKEN" ]; then
+            echo "::error::Configure an authorized NPM_TOKEN before publishing"
+            exit 1
+          fi
+
       - name: Publish to npm
         run: |
           node --input-type=module <<'NODE'
