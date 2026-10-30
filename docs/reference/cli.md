@@ -5,7 +5,7 @@ VibeMCP includes a CLI for account management and server operations.
 ## Usage
 
 ```bash
-npx vibemcp [command] [options]
+npx @vibetensor/vibemcp [command] [options]
 ```
 
 ## Commands
@@ -15,7 +15,7 @@ npx vibemcp [command] [options]
 Starts the MCP server on stdio transport. This is what MCP clients use:
 
 ```bash
-npx vibemcp
+npx @vibetensor/vibemcp
 ```
 
 ### `serve`
@@ -23,7 +23,7 @@ npx vibemcp
 Explicit alias for starting the MCP server:
 
 ```bash
-npx vibemcp serve
+npx @vibetensor/vibemcp serve
 ```
 
 ### `auth`
@@ -32,10 +32,10 @@ Authenticate with a provider.
 
 ```bash
 # Google OAuth (opens browser)
-npx vibemcp auth google your@gmail.com
+npx @vibetensor/vibemcp auth google your@gmail.com
 
 # Microsoft Device Code (prints code + URL)
-npx vibemcp auth microsoft your@outlook.com
+npx @vibetensor/vibemcp auth microsoft your@outlook.com
 ```
 
 **Google flow:**
@@ -54,10 +54,10 @@ Manage connected accounts.
 
 ```bash
 # List all connected accounts
-npx vibemcp accounts list
+npx @vibetensor/vibemcp accounts list
 
 # Remove an account
-npx vibemcp accounts remove your@gmail.com
+npx @vibetensor/vibemcp accounts remove your@gmail.com
 ```
 
 ### `help`
@@ -65,7 +65,7 @@ npx vibemcp accounts remove your@gmail.com
 Show usage information:
 
 ```bash
-npx vibemcp help
+npx @vibetensor/vibemcp help
 ```
 
 ### `version`
@@ -73,7 +73,7 @@ npx vibemcp help
 Show the installed version:
 
 ```bash
-npx vibemcp version
+npx @vibetensor/vibemcp version
 ```
 
 ## Environment Variables

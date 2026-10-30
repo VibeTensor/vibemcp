@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-30
+
+### Changed
+- Restore the published @vibetensor/vibemcp package identity and update installation examples. The executable remains vibemcp.
+- Require Node.js 22.12 or later; validate Node.js 22 and 24 in CI.
+- Update MSAL to 7.1.2 and Zod to 4.6.7.
+- Fail release publication on errors and verify the uploaded package before creating a GitHub release.
+
 ### Security
 - Require MCP SDK 1.32.0 or later and explicitly limit tool-call arguments to 10,000 combined array elements and object keys before schema validation.
 - Verify that oversized calls do not invoke tools and that the stdio server continues handling valid calls.

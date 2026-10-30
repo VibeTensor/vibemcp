@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 # CodeRabbit Configuration
 # https://docs.coderabbit.ai/guides/configure-coderabbit
 
@@ -8,22 +9,23 @@ reviews:
   # Enable automatic reviews on pull requests
   auto_review:
     enabled: true
-    # Ignore drafts
-    drafts: false
+    # Review drafts so checks complete before the owner authorizes shipping
+    drafts: true
     # Review base branches
     base_branches:
       - main
       - develop
 
-  # Review profile (chill, default, strict, assertive)
-  profile: default
+  # Review profile (quiet, chill, assertive)
+  profile: assertive
 
   # Request changes on high severity issues
   request_changes_workflow: true
 
-  # Auto-approve PRs when no actionable issues found
-  auto_approve:
-    enabled: true
+  # Keep approval decisions with the maintainer
+  auto_approvals:
+    enabled: false
+    allow_author_approval: false
 
   # High-level summary in PR comment
   high_level_summary: true
@@ -74,6 +76,36 @@ reviews:
         - Verify links are valid
         - Ensure code examples are correct
 
+  # Tools integration
+  tools:
+    # GitHub Actions integration
+    github-checks:
+      enabled: true
+
+    # Language-specific tools
+    biome:
+      enabled: true
+    eslint:
+      enabled: true
+
+    # Security scanning
+    shellcheck:
+      enabled: true
+
+    # Markdown linting
+    markdownlint:
+      enabled: true
+
+
+  # Exclude generated files from reviews
+  path_filters:
+    - "!**/*.lock"
+    - "!**/node_modules/**"
+    - "!**/dist/**"
+    - "!**/coverage/**"
+    - "!**/*.min.js"
+    - "!**/package-lock.json"
+
 # Chat settings (for interactive comments)
 chat:
   auto_reply: true
@@ -94,33 +126,3 @@ tone_instructions: |
   - Suggest improvements, not just problems
   - Consider token efficiency for all data output
   - Prioritize security issues in auth-related code
-
-# Tools integration
-tools:
-  # GitHub Actions integration
-  github-checks:
-    enabled: true
-    timeout_ms: 90000
-
-  # Language-specific tools
-  biome:
-    enabled: true
-  eslint:
-    enabled: true
-
-  # Security scanning
-  shellcheck:
-    enabled: true
-
-  # Markdown linting
-  markdownlint:
-    enabled: true
-
-# Ignore patterns (files to skip)
-ignore:
-  - "**/*.lock"
-  - "**/node_modules/**"
-  - "**/dist/**"
-  - "**/coverage/**"
-  - "**/*.min.js"
-  - "**/package-lock.json"
