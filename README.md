@@ -78,6 +78,13 @@ Calendar events show 70% savings because the raw Google Calendar API response ha
 
 ## Quick Start
 
+**Release status (2026-10-30):** The [npm registry](https://registry.npmjs.org/@vibetensor%2fvibemcp/latest)
+still lists `@vibetensor/vibemcp` **0.2.0**. The runtime dependency and Microsoft
+authentication fixes merged on `main` await a new npm publication. For those
+fixes, follow the [from-source setup](https://vibemcp.vibetensor.com/guide/getting-started#from-source)
+at reviewed revision [`6f59dbed5768bdaf098e18acadd9ad26c9a74ac8`](https://github.com/VibeTensor/vibemcp/tree/6f59dbed5768bdaf098e18acadd9ad26c9a74ac8).
+The `npx` examples below use the published package.
+
 ### 1. Add to your MCP client
 
 **Claude Code** (`~/.claude.json`):

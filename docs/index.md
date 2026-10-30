@@ -44,6 +44,15 @@ features:
 
 <div class="vp-doc" style="max-width: 688px; margin: 0 auto; padding: 0 24px;">
 
+::: warning npm release status (2026-10-30)
+The [npm registry](https://registry.npmjs.org/@vibetensor%2fvibemcp/latest) still
+lists `@vibetensor/vibemcp` **0.2.0**. The runtime dependency and Microsoft
+authentication fixes on `main` await publication. For those fixes, use the
+[from-source setup](/guide/getting-started#from-source) at reviewed revision
+[`6f59dbed5768bdaf098e18acadd9ad26c9a74ac8`](https://github.com/VibeTensor/vibemcp/tree/6f59dbed5768bdaf098e18acadd9ad26c9a74ac8).
+The `npx` examples use the published package.
+:::
+
 ## Token Savings (Real Benchmarks)
 
 Measured on live accounts with real data, February 2026:

@@ -2,6 +2,15 @@
 
 Get VibeMCP running in under 5 minutes.
 
+::: warning npm release status (2026-10-30)
+The [npm registry](https://registry.npmjs.org/@vibetensor%2fvibemcp/latest) still
+lists `@vibetensor/vibemcp` **0.2.0**. Runtime dependency and Microsoft
+authentication fixes merged on `main` await publication. To use those fixes
+now, start with [From Source](#from-source), pinned to reviewed revision
+[`6f59dbed5768bdaf098e18acadd9ad26c9a74ac8`](https://github.com/VibeTensor/vibemcp/tree/6f59dbed5768bdaf098e18acadd9ad26c9a74ac8).
+The `npx` examples use the published package.
+:::
+
 ## Prerequisites
 
 - **Node.js 22.12+** - [Download](https://nodejs.org/)
@@ -64,8 +73,14 @@ Add to `~/.claude.json` under `mcpServers`:
 ```bash
 git clone https://github.com/VibeTensor/vibemcp.git
 cd vibemcp
-npm install && npm run build
+git checkout --detach 6f59dbed5768bdaf098e18acadd9ad26c9a74ac8
+npm ci
+npm run build
 ```
+
+For the CLI examples below, use
+`node /absolute/path/to/vibemcp/dist/cli.js` in place of
+`npx @vibetensor/vibemcp` to keep using this source build.
 
 Then use the built files in your MCP config:
 
