@@ -12,7 +12,11 @@ describe('server tool input budget', () => {
       content: [{ type: 'text' as const, text: 'accepted' }],
     }));
     server.registerTool('batch', { inputSchema: { items: z.array(z.string()) } }, handler);
-    server.registerTool('record', { inputSchema: { values: z.record(z.string()) } }, handler);
+    server.registerTool(
+      'record',
+      { inputSchema: { values: z.record(z.string(), z.string()) } },
+      handler,
+    );
     const client = new Client({ name: 'input-budget-client', version: '0.0.0' });
     peers.push({ client, server });
     const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();

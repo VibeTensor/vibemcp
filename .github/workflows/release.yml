@@ -6,25 +6,42 @@ on:
       - 'v*'
 
 permissions:
-  contents: write
-  packages: write
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: '20'
+          node-version: '22'
           registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
+
+      - name: Validate release identity
+        run: |
+          git merge-base --is-ancestor HEAD origin/main
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          if (pkg.name !== '@vibetensor/vibemcp' || process.env.GITHUB_REF !== `refs/tags/v${pkg.version}`) {
+            throw new Error('Package identity or release tag does not match');
+          }
+          NODE
 
       - name: Install dependencies
         run: npm ci
@@ -33,34 +50,67 @@ jobs:
         run: npm run build
 
       - name: Run tests
-        run: npm test
+        run: npm test -- --runInBand
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Audit runtime dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Pack release
+        run: npm pack --json > release-pack.json
 
       - name: Publish to npm
-        run: npm publish --access public || echo "Version already published, skipping"
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import { execFileSync } from 'node:child_process';
+          const [pack] = JSON.parse(fs.readFileSync('release-pack.json', 'utf8'));
+          const channel = pack.version.includes('-') ? 'next' : 'latest';
+          execFileSync('npm', ['publish', pack.filename, '--access', 'public', '--tag', channel], { stdio: 'inherit' });
+          NODE
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Generate changelog
-        id: changelog
-        uses: metcalfc/changelog-generator@v4.6.2
-        with:
-          myToken: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify registry integrity
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          const [pack] = JSON.parse(fs.readFileSync('release-pack.json', 'utf8'));
+          const endpoint = `https://registry.npmjs.org/@vibetensor%2fvibemcp/${encodeURIComponent(pack.version)}`;
+          let matched = false;
+          for (let attempt = 0; attempt < 12; attempt++) {
+            const response = await fetch(endpoint, { signal: AbortSignal.timeout(15000) });
+            if (response.ok) {
+              const remote = await response.json();
+              if (remote.name !== pack.name || remote.version !== pack.version || remote.dist?.integrity !== pack.integrity) {
+                throw new Error('Published artifact differs from verified tarball');
+              }
+              matched = true;
+              break;
+            }
+            if (response.status !== 404) throw new Error(`Registry returned ${response.status}`);
+            await new Promise(resolve => setTimeout(resolve, 5000));
+          }
+          if (!matched) throw new Error('Published artifact not visible in registry');
+          NODE
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
         with:
+          generate_release_notes: true
+          files: '*.tgz'
+          fail_on_unmatched_files: true
           body: |
-            ## What's Changed
-            ${{ steps.changelog.outputs.changelog }}
-
-            ## Installation
+            Install with Node.js 22.12 or later:
             ```bash
-            npm install vibemcp@${{ github.ref_name }}
+            npm install @vibetensor/vibemcp@${{ github.ref_name }}
             ```
 
             Or use directly:
             ```bash
-            npx vibemcp@${{ github.ref_name }}
+            npx @vibetensor/vibemcp@${{ github.ref_name }}
             ```
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
