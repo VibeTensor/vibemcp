@@ -85,7 +85,7 @@
     "LICENSE"
   ],
   "overrides": {
-    "vite": "^6.4.3",
+    "vite": "^6.4.4",
     "esbuild": ">=0.25.0 <0.27.3"
   }
 }

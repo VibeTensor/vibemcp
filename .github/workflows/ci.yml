@@ -78,6 +78,7 @@ jobs:
   build:
     name: Build
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       matrix:
         node-version: [22, 24]
@@ -96,6 +97,12 @@ jobs:
 
       - name: Build
         run: npm run build
+
+      - name: Build documentation and Mermaid diagrams
+        timeout-minutes: 10
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+        run: npm run docs:build
 
   security:
     name: Security Scan
