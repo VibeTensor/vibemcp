@@ -9,6 +9,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   typecheck:
     name: Type Check
@@ -54,6 +58,7 @@ jobs:
   test:
     name: Test
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -68,7 +73,7 @@ jobs:
         run: npm ci
 
       - name: Run tests
-        run: npm test
+        run: npm test -- --runInBand
 
   build:
     name: Build
